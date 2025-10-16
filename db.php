@@ -11,4 +11,3 @@ die('Database is not connected, Failed' . $conn->connect_error);
 }
 
 ?>
-
