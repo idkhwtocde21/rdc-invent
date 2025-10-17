@@ -119,7 +119,7 @@ $stmt->close();
 
           <div class="controls">
             <input type="text" class="search-input" placeholder="🔍 Search patients by name or ID...">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" id="open-add-patient-modal">
               ➕ Add Patient
             </button>
           </div>
@@ -136,55 +136,40 @@ $stmt->close();
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>#001</td>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span>👤</span>
-                        <strong>Juan Dela Cruz</strong>
-                      </div>
-                    </td>
-                    <td>09123456789</td>
-                    <td>Oct 10, 2025</td>
-                    <td>
-                      <button class="btn btn-secondary btn-small">📋 View</button>
-                      <button class="btn btn-secondary btn-small">✏️ Edit</button>
-                      <button class="btn btn-danger btn-small">🗑️ Delete</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>#002</td>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span>👤</span>
-                        <strong>Maria Santos</strong>
-                      </div>
-                    </td>
-                    <td>09187654321</td>
-                    <td>Oct 08, 2025</td>
-                    <td>
-                      <button class="btn btn-secondary btn-small">📋 View</button>
-                      <button class="btn btn-secondary btn-small">✏️ Edit</button>
-                      <button class="btn btn-danger btn-small">🗑️ Delete</button>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td>#003</td>
-                    <td>
-                      <div style="display: flex; align-items: center; gap: 8px;">
-                        <span>👤</span>
-                        <strong>Pedro Reyes</strong>
-                      </div>
-                    </td>
-                    <td>09198765432</td>
-                    <td>Oct 05, 2025</td>
-                    <td>
-                      <button class="btn btn-secondary btn-small">📋 View</button>
-                      <button class="btn btn-secondary btn-small">✏️ Edit</button>
-                      <button class="btn btn-danger btn-small">🗑️ Delete</button>
-                    </td>
-                  </tr>
+                <tbody id="patient-table-body">
+<?php
+$patients = $conn->query("SELECT * FROM patients ORDER BY id DESC");
+if ($patients->num_rows === 0): ?>
+  <tr>
+    <td colspan="5" style="text-align:center; color:#64748b; font-style:italic;">
+      No patient records found.
+    </td>
+  </tr>
+<?php
+else:
+  while ($row = $patients->fetch_assoc()):
+?>
+  <tr 
+    data-id="<?php echo $row['id']; ?>" 
+    data-email="<?php echo htmlspecialchars($row['email']); ?>" 
+    data-address="<?php echo htmlspecialchars($row['address']); ?>"
+  >
+    <td>#<?php echo str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
+    <td>
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <span>👤</span>
+        <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong>
+      </div>
+    </td>
+    <td><?php echo htmlspecialchars($row['contact']); ?></td>
+    <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
+    <td>
+      <button class="btn btn-secondary btn-small view-patient">📋 View</button>
+      <button class="btn btn-secondary btn-small edit-patient">✏️ Edit</button>
+      <button class="btn btn-danger btn-small delete-patient">🗑️ Delete</button>
+    </td>
+  </tr>
+<?php endwhile; endif; ?>
                 </tbody>
               </table>
             </div>
@@ -200,7 +185,7 @@ $stmt->close();
 
           <div class="controls">
             <input type="text" class="search-input" placeholder="🔍 Search inventory items...">
-            <button class="btn btn-primary">
+            <button class="btn btn-primary" id="open-add-inventory-modal">
               ➕ Add Item
             </button>
           </div>
@@ -343,6 +328,75 @@ else:
       <div class="modal-actions">
         <button class="btn btn-secondary" id="cancel-save-settings">Cancel</button>
         <button class="btn btn-primary" id="confirm-save-settings">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Patient Modal -->
+  <div class="modal" id="add-patient-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">👤</div>
+        <h3 class="modal-title">Add Patient</h3>
+        <p class="modal-text">Fill out the patient details below.</p>
+      </div>
+      <form id="add-patient-form">
+        <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" name="patient_name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Contact Number</label>
+          <input type="text" class="form-input" name="contact" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email (Optional)</label>
+          <input type="email" class="form-input" name="email">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Address</label>
+          <textarea class="form-input" name="address" rows="2"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-add-patient">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="patient-submit-btn">Add Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Patient Modal -->
+  <div class="modal" id="delete-patient-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">🗑️</div>
+        <h3 class="modal-title">Delete Patient</h3>
+        <p class="modal-text">Are you sure you want to delete this patient record? This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancel-delete-patient">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-patient">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Patient Modal -->
+  <div class="modal" id="view-patient-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">👁️</div>
+        <h3 class="modal-title">Patient Details</h3>
+        <p class="modal-text">Full details for the selected patient.</p>
+      </div>
+      <div class="card" style="margin:0; box-shadow:none;">
+        <div style="margin-bottom:12px;"><strong>Name:</strong> <span id="view-patient-name"></span></div>
+        <div style="margin-bottom:12px;"><strong>Contact:</strong> <span id="view-patient-contact"></span></div>
+        <div style="margin-bottom:12px;"><strong>Email:</strong> <span id="view-patient-email"></span></div>
+        <div style="margin-bottom:12px;"><strong>Address:</strong> <span id="view-patient-address"></span></div>
+        <div style="margin-bottom:0; color:#64748b;"><small id="view-patient-created"></small></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="close-view-patient">Close</button>
       </div>
     </div>
   </div>

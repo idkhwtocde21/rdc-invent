@@ -14,6 +14,7 @@ if (isset($_SESSION['user_id'])) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Romero's Dental Clinic - Login</title>
   <link rel="stylesheet" href="login.css">
+  <link rel="icon" type="image" href="logo/rom_logo.png">
 </head>
 <body>
 

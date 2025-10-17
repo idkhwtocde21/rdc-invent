@@ -3,12 +3,14 @@ document.getElementById('show-signup').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('login-box').classList.add('hidden');
   document.getElementById('signup-box').classList.remove('hidden');
+  hideNotification();
 });
 
 document.getElementById('show-login').addEventListener('click', (e) => {
   e.preventDefault();
   document.getElementById('signup-box').classList.add('hidden');
   document.getElementById('login-box').classList.remove('hidden');
+  hideNotification();
 });
 
 // Notification system (improved with animations)
@@ -24,15 +26,22 @@ function showNotification(message, type = 'success') {
     clearTimeout(notificationTimeout);
   }
   
-  notificationText.textContent = message;
-  notification.className = 'notification show ' + type;
-  notification.style.display = 'flex';
-  icon.textContent = type === 'success' ? '✓' : '✕';
+  // Ensure previous animation is cleared
+  notification.classList.remove('show', 'hide', 'success', 'error');
+  notification.style.display = 'none';
   
-  // Hide after 3000ms with animation
-  notificationTimeout = setTimeout(() => {
-    hideNotification();
-  }, 3000);
+  // Small delay to ensure CSS reset
+  setTimeout(() => {
+    notificationText.textContent = message;
+    icon.textContent = type === 'success' ? '✓' : '✕';
+    notification.className = 'notification show ' + type;
+    notification.style.display = 'flex';
+    
+    // Hide after 3.5 seconds
+    notificationTimeout = setTimeout(() => {
+      hideNotification();
+    }, 3500);
+  }, 50);
 }
 
 function hideNotification() {
@@ -45,15 +54,17 @@ function hideNotification() {
     notificationTimeout = null;
   }
   
-  // Add hide animation
-  notification.classList.remove('show');
-  notification.classList.add('hide');
-  
-  // After animation completes, fully hide
-  setTimeout(() => {
-    notification.style.display = 'none';
-    notification.classList.remove('hide', 'success', 'error');
-  }, 400); // matches animation duration
+  // Only hide if currently showing
+  if (notification.classList.contains('show')) {
+    notification.classList.remove('show');
+    notification.classList.add('hide');
+    
+    // After animation completes, fully hide
+    setTimeout(() => {
+      notification.style.display = 'none';
+      notification.classList.remove('hide', 'success', 'error');
+    }, 400);
+  }
 }
 
 // Login Form Handler
@@ -71,7 +82,7 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
     if (data.status === 'success') {
       setTimeout(() => {
         window.location.href = 'dashboard.php';
-      }, 4500); // 4.5 seconds delay
+      }, 2500);
     }
   })
   .catch(() => {
@@ -93,7 +104,6 @@ document.getElementById('signupForm').addEventListener('submit', (e) => {
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       document.getElementById('signupForm').reset();
-      // Switch back to login form after successful signup
       setTimeout(() => {
         document.getElementById('show-login').click();
       }, 2500);
