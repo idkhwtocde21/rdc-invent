@@ -24,7 +24,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("ssss", $patient_name, $contact, $email, $address);
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Patient added successfully!"]);
+        // Get the newly inserted patient ID
+        $new_id = $conn->insert_id;
+        
+        // Return the new patient data
+        echo json_encode([
+            "status" => "success", 
+            "message" => "Patient added successfully!",
+            "patient" => [
+                "id" => $new_id,
+                "patient_name" => $patient_name,
+                "contact" => $contact,
+                "email" => $email,
+                "address" => $address,
+                "created_at" => date('Y-m-d H:i:s')
+            ]
+        ]);
     } else {
         echo json_encode(["status" => "error", "message" => "Error adding patient."]);
     }

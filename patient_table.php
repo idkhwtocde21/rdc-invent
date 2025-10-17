@@ -17,7 +17,11 @@ if ($patients->num_rows === 0): ?>
 else:
   while ($row = $patients->fetch_assoc()):
 ?>
-  <tr data-id="<?php echo $row['id']; ?>">
+  <tr 
+    data-id="<?php echo $row['id']; ?>" 
+    data-email="<?php echo htmlspecialchars($row['email']); ?>" 
+    data-address="<?php echo htmlspecialchars($row['address']); ?>"
+  >
     <td>#<?php echo str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
@@ -28,7 +32,7 @@ else:
     <td><?php echo htmlspecialchars($row['contact']); ?></td>
     <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
     <td>
-      <button class="btn btn-secondary btn-small">📋 View</button>
+      <button class="btn btn-secondary btn-small view-patient">📋 View</button>
       <button class="btn btn-secondary btn-small edit-patient">✏️ Edit</button>
       <button class="btn btn-danger btn-small delete-patient">🗑️ Delete</button>
     </td>

@@ -495,6 +495,7 @@ cancelDeletePatient.addEventListener('click', () => {
 // }
 // });
 
+
 // Confirm delete patient
 confirmDeletePatient.addEventListener('click', () => {
   if (deletePatientId) {
@@ -582,10 +583,14 @@ function attachPatientRowEvents() {
       const id = row.dataset.id;
       const patient_name = row.children[1].querySelector('strong').innerText.trim();
       const contact = row.children[2].innerText.trim();
+      const email = row.dataset.email || '';
+      const address = row.dataset.address || '';
 
       addPatientForm.reset();
       addPatientForm.patient_name.value = patient_name;
       addPatientForm.contact.value = contact;
+      addPatientForm.email.value = email;
+      addPatientForm.address.value = address;
       addPatientForm.dataset.editId = id;
       addPatientModal.classList.add('show');
       patientSubmitBtn.textContent = 'Finish Editing';
@@ -635,7 +640,9 @@ addPatientForm.addEventListener('submit', function(e) {
   const form = e.target;
   const formData = new FormData(form);
   let url = 'add_patient.php';
-  if (form.dataset.editId) {
+  const isEditing = !!form.dataset.editId;
+  
+  if (isEditing) {
     formData.append('id', form.dataset.editId);
     url = 'edit_patient.php';
   }
@@ -651,6 +658,8 @@ addPatientForm.addEventListener('submit', function(e) {
       form.reset();
       addPatientModal.classList.remove('show');
       delete form.dataset.editId;
+      
+      // Just refresh the table for both add and edit
       refreshPatientTable();
     }
   })
@@ -660,7 +669,7 @@ addPatientForm.addEventListener('submit', function(e) {
 });
 
 function refreshPatientTable() {
-  fetch('patient_table.php')
+  return fetch('patient_table.php')
     .then(res => res.text())
     .then(html => {
       document.getElementById('patient-table-body').innerHTML = html;

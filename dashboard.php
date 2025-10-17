@@ -24,6 +24,7 @@ $stmt->close();
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard - Romero's Dental Clinic</title>
   <link rel="stylesheet" href="dashboard.css">
+  <link rel="icon" type="image" href="logos/rom_logo.png">
 </head>
 <body>
   <div class="dashboard">
