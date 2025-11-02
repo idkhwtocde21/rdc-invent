@@ -178,7 +178,7 @@ confirmSaveSettings.addEventListener('click', () => {
       body: formData
     })
     .then(res => res.json())
-    .then(data => {
+    .then((data) => {
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       
       if (data.status === 'success') {
@@ -230,7 +230,7 @@ document.querySelectorAll('.search-input').forEach(input => {
 // Inventory Management
 
 const inventorySection = document.getElementById('inventory-section');
-const addItemBtn = document.getElementById('open-add-inventory-modal'); // ✅ Use ID instead
+const addItemBtn = document.getElementById('open-add-inventory-modal');
 const addInventoryModal = document.getElementById('add-inventory-modal');
 const cancelAddInventory = document.getElementById('cancel-add-inventory');
 const addInventoryForm = document.getElementById('add-inventory-form');
@@ -261,28 +261,6 @@ cancelAddInventory.addEventListener('click', () => {
 //  }
 // });
 
-// Edit Inventory Handler (initial rows)
-document.querySelectorAll('.edit-inventory').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const row = btn.closest('tr');
-    const id = row.dataset.id;
-    const item_name = row.children[1].querySelector('strong').innerText.trim();
-    const category = row.children[2].innerText.trim();
-    const quantity = row.children[3].innerText.trim();
-    const status = row.children[4].innerText.replace(/[^a-zA-Z ]/g, '').trim();
-
-    addInventoryForm.reset();
-    addInventoryForm.item_name.value = item_name;
-    addInventoryForm.category.value = category;
-    addInventoryForm.quantity.value = quantity;
-    addInventoryForm.status.value = status;
-    addInventoryForm.dataset.editId = id;
-    addInventoryModal.classList.add('show');
-    inventorySubmitBtn.textContent = 'Finish Editing';
-    hideNotification();
-  });
-});
-
 // Delete Inventory Modal Logic
 const deleteInventoryModal = document.getElementById('delete-inventory-modal');
 const cancelDeleteInventory = document.getElementById('cancel-delete-inventory');
@@ -306,6 +284,7 @@ cancelDeleteInventory.addEventListener('click', () => {
 //    hideNotification();
 //  }
 // });
+
 
 // Confirm delete
 confirmDeleteInventory.addEventListener('click', () => {
@@ -332,10 +311,10 @@ function attachInventoryRowEvents() {
     btn.onclick = function() {
       const row = btn.closest('tr');
       const id = row.dataset.id;
-      const item_name = row.children[1].querySelector('strong').innerText.trim();
-      const category = row.children[2].innerText.trim();
-      const quantity = row.children[3].innerText.trim();
-      const status = row.children[4].innerText.replace(/[^a-zA-Z ]/g, '').trim();
+      const item_name = row.children[0].querySelector('strong').innerText.trim();
+      const category = row.children[1].innerText.trim();
+      const quantity = row.children[2].innerText.trim();
+      const status = row.children[3].innerText.replace(/[^a-zA-Z ]/g, '').trim();
 
       addInventoryForm.reset();
       addInventoryForm.item_name.value = item_name;
@@ -450,6 +429,16 @@ const patientSubmitBtn = document.getElementById('patient-submit-btn');
 addPatientBtn.addEventListener('click', () => {
   addPatientForm.reset();
   delete addPatientForm.dataset.editId;
+  
+  // Hide last visit field for new patients
+  document.getElementById('last-visit-group').style.display = 'none';
+  
+  // Hide image preview for new patients
+  const imagePreview = document.getElementById('image-preview');
+  if (imagePreview) {
+    imagePreview.style.display = 'none';
+  }
+  
   addPatientModal.classList.add('show');
   patientSubmitBtn.textContent = 'Add Patient';
   hideNotification();
@@ -470,6 +459,7 @@ cancelAddPatient.addEventListener('click', () => {
 //     hideNotification();
 //  }
 // });
+
 
 // Delete Patient Modal Logic
 const deletePatientModal = document.getElementById('delete-patient-modal');
@@ -515,24 +505,6 @@ confirmDeletePatient.addEventListener('click', () => {
   }
 });
 
-// Edit Patient Handler (initial rows)
-document.querySelectorAll('.edit-patient').forEach(btn => {
-  btn.addEventListener('click', function() {
-    const row = btn.closest('tr');
-    const id = row.dataset.id;
-    const patient_name = row.children[1].querySelector('strong').innerText.trim();
-    const contact = row.children[2].innerText.trim();
-
-    addPatientForm.reset();
-    addPatientForm.patient_name.value = patient_name;
-    addPatientForm.contact.value = contact;
-    addPatientForm.dataset.editId = id;
-    addPatientModal.classList.add('show');
-    patientSubmitBtn.textContent = 'Finish Editing';
-    hideNotification();
-  });
-});
-
 // View Patient modal close button and outside click
 const viewPatientModal = document.getElementById('view-patient-modal');
 const closeViewPatient = document.getElementById('close-view-patient');
@@ -549,6 +521,25 @@ if (viewPatientModal) {
   });
 }
 
+// Image preview functionality
+const patientImageInput = document.getElementById('patient-image-input');
+if (patientImageInput) {
+  patientImageInput.addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        document.getElementById('preview-img').src = event.target.result;
+        document.getElementById('image-preview').style.display = 'block';
+      };
+      reader.readAsDataURL(file);
+    } else {
+      document.getElementById('image-preview').style.display = 'none';
+    }
+  });
+}
+
+// Update attachPatientRowEvents function to include image handling
 function attachPatientRowEvents() {
   // View Patient Handler
   document.querySelectorAll('.view-patient').forEach(btn => {
@@ -557,18 +548,33 @@ function attachPatientRowEvents() {
       if (!row) return;
       const id = row.dataset.id || '';
       const name = row.querySelector('strong') ? row.querySelector('strong').innerText.trim() : '';
-      const contact = row.children[2] ? row.children[2].innerText.trim() : '';
+      const contact = row.children[1] ? row.children[1].innerText.trim() : '';
       const email = row.dataset.email || '';
       const address = row.dataset.address || '';
-      const created = row.children[3] ? row.children[3].innerText.trim() : '';
+      const lastVisit = row.children[2] ? row.children[2].innerText.trim() : '';
+      const image = row.dataset.image || '';
+      const created = row.dataset.created || '';
 
       const viewModal = document.getElementById('view-patient-modal');
       if (!viewModal) return;
+
+      // Handle patient image
+      const patientImg = document.getElementById('view-patient-image');
+      const noImage = document.getElementById('view-patient-no-image');
+      if (image) {
+        patientImg.src = image;
+        patientImg.style.display = 'block';
+        noImage.style.display = 'none';
+      } else {
+        patientImg.style.display = 'none';
+        noImage.style.display = 'flex';
+      }
 
       document.getElementById('view-patient-name').textContent = name;
       document.getElementById('view-patient-contact').textContent = contact;
       document.getElementById('view-patient-email').textContent = email || '—';
       document.getElementById('view-patient-address').textContent = address || '—';
+      document.getElementById('view-patient-last-visit').textContent = lastVisit || 'No visit yet';
       document.getElementById('view-patient-created').textContent = created ? `Added: ${created}` : '';
 
       viewModal.classList.add('show');
@@ -581,16 +587,31 @@ function attachPatientRowEvents() {
     btn.onclick = function() {
       const row = btn.closest('tr');
       const id = row.dataset.id;
-      const patient_name = row.children[1].querySelector('strong').innerText.trim();
-      const contact = row.children[2].innerText.trim();
+      const patient_name = row.children[0].querySelector('strong').innerText.trim();
+      const contact = row.children[1].innerText.trim();
       const email = row.dataset.email || '';
       const address = row.dataset.address || '';
+      const lastVisit = row.dataset.lastVisit || '';
 
       addPatientForm.reset();
       addPatientForm.patient_name.value = patient_name;
       addPatientForm.contact.value = contact;
       addPatientForm.email.value = email;
       addPatientForm.address.value = address;
+      
+      // Hide image preview when editing
+      const imagePreview = document.getElementById('image-preview');
+      if (imagePreview) {
+        imagePreview.style.display = 'none';
+      }
+      
+      // Show and populate last visit field for editing
+      const lastVisitGroup = document.getElementById('last-visit-group');
+      if (lastVisitGroup) {
+        lastVisitGroup.style.display = 'block';
+        addPatientForm.last_visit.value = lastVisit;
+      }
+      
       addPatientForm.dataset.editId = id;
       addPatientModal.classList.add('show');
       patientSubmitBtn.textContent = 'Finish Editing';
@@ -613,7 +634,170 @@ function attachPatientRowEvents() {
 // Call once on page load
 attachPatientRowEvents();
 
-// Handle Add/Edit Patient Form Submission
+// PDF Export functionality
+const exportPdfBtn = document.getElementById('export-patient-pdf');
+if (exportPdfBtn) {
+  exportPdfBtn.addEventListener('click', function() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    
+    const name = document.getElementById('view-patient-name').textContent;
+    const contact = document.getElementById('view-patient-contact').textContent;
+    const email = document.getElementById('view-patient-email').textContent;
+    const address = document.getElementById('view-patient-address').textContent;
+    const lastVisit = document.getElementById('view-patient-last-visit').textContent;
+    const created = document.getElementById('view-patient-created').textContent;
+    const patientImg = document.getElementById('view-patient-image');
+    
+    // Function to generate PDF with or without image
+    const generatePDF = (imgData = null) => {
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(102, 126, 234);
+      doc.text("Romero's Dental Clinic", 105, 20, { align: 'center' });
+      
+      doc.setFontSize(16);
+      doc.setTextColor(0, 0, 0);
+      doc.text('Patient Record', 105, 30, { align: 'center' });
+      
+      // Add horizontal line
+      doc.setLineWidth(0.5);
+      doc.setDrawColor(102, 126, 234);
+      doc.line(20, 35, 190, 35);
+      
+      let y = 50;
+      
+      // Add patient image if available
+      if (imgData) {
+        try {
+          // Add colored border circle
+          doc.setDrawColor(102, 126, 234);
+          doc.setLineWidth(3);
+          doc.circle(105, y + 21, 22, 'S');
+          
+          // Add the circular clipped image on top (fills entire circle)
+          doc.addImage(imgData, 'PNG', 83, y - 1, 44, 44);
+          
+          y += 55;
+        } catch (error) {
+          console.log('Error adding image to PDF:', error);
+          // Continue without image - just add space
+          y += 10;
+        }
+      } else {
+        // No placeholder - just continue with patient details
+        y += 10;
+      }
+      
+      // Patient details
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      doc.setFont(undefined, 'bold');
+      doc.text('Name:', 20, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(name, 60, y);
+      
+      y += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Contact:', 20, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(contact, 60, y);
+      
+      y += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Email:', 20, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(email, 60, y);
+      
+      y += 10;
+      doc.setFont(undefined, 'bold');
+      doc.text('Address:', 20, y);
+      doc.setFont(undefined, 'normal');
+      const splitAddress = doc.splitTextToSize(address, 130);
+      doc.text(splitAddress, 60, y);
+      
+      y += (splitAddress.length * 7) + 3;
+      doc.setFont(undefined, 'bold');
+      doc.text('Last Visit:', 20, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(lastVisit, 60, y);
+      
+      y += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(created, 20, y);
+      
+      // Footer
+      doc.setLineWidth(0.3);
+      doc.setDrawColor(200, 200, 200);
+      doc.line(20, 275, 190, 275);
+      
+      doc.setFontSize(8);
+      doc.setTextColor(150, 150, 150);
+      doc.text('Generated on: ' + new Date().toLocaleString(), 105, 280, { align: 'center' });
+      doc.text("Romero's Dental Clinic - Patient Management System", 105, 285, { align: 'center' });
+      
+      // Save PDF
+      const fileName = `patient_${name.replace(/\s+/g, '_')}_record.pdf`;
+      doc.save(fileName);
+      showNotification('PDF exported successfully!', 'success');
+    };
+    
+    // Check if patient has an image
+    if (patientImg && patientImg.src && patientImg.style.display !== 'none') {
+      // Convert image to base64 for PDF with circular clipping
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      
+      img.crossOrigin = 'Anonymous';
+      img.onload = function() {
+        // Set canvas size for circular image
+        const size = 500; // Higher resolution for better quality
+        canvas.width = size;
+        canvas.height = size;
+        
+        // Fill with transparent background
+        ctx.clearRect(0, 0, size, size);
+        
+        // Create circular clipping path
+        ctx.beginPath();
+        ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.clip();
+        
+        // Calculate dimensions to completely fill the circle (cover mode)
+        const scale = Math.max(size / img.width, size / img.height);
+        const scaledWidth = img.width * scale;
+        const scaledHeight = img.height * scale;
+        
+        // Center the image
+        const offsetX = (size - scaledWidth) / 2;
+        const offsetY = (size - scaledHeight) / 2;
+        
+        // Draw the image centered and scaled to fill entire circle
+        ctx.drawImage(img, offsetX, offsetY, scaledWidth, scaledHeight);
+        
+        // Get base64 image data as PNG to preserve transparency
+        const imgData = canvas.toDataURL('image/png', 1.0);
+        generatePDF(imgData);
+      };
+      
+      img.onerror = function() {
+        console.log('Error loading image, generating PDF without image');
+        generatePDF();
+      };
+      
+      img.src = patientImg.src;
+    } else {
+      // No image available, generate PDF without image
+      generatePDF();
+    }
+  });
+}
+
+// Update form submission to handle file upload
 addPatientForm.addEventListener('submit', function(e) {
   e.preventDefault();
 
@@ -638,7 +822,7 @@ addPatientForm.addEventListener('submit', function(e) {
   }
 
   const form = e.target;
-  const formData = new FormData(form);
+  const formData = new FormData(form); // This will handle file uploads
   let url = 'add_patient.php';
   const isEditing = !!form.dataset.editId;
   
@@ -649,13 +833,17 @@ addPatientForm.addEventListener('submit', function(e) {
   
   fetch(url, {
     method: 'POST',
-    body: formData
+    body: formData // Don't set Content-Type header, let browser set it
   })
   .then(res => res.json())
   .then(data => {
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       form.reset();
+      const imagePreview = document.getElementById('image-preview');
+      if (imagePreview) {
+        imagePreview.style.display = 'none';
+      }
       addPatientModal.classList.remove('show');
       delete form.dataset.editId;
       

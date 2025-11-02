@@ -25,6 +25,9 @@ $stmt->close();
   <title>Dashboard - Romero's Dental Clinic</title>
   <link rel="stylesheet" href="dashboard.css">
   <link rel="icon" type="image" href="logos/rom_logo.png">
+  <!-- Add jsPDF and html2canvas for PDF export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 </head>
 <body>
   <div class="dashboard">
@@ -119,7 +122,7 @@ $stmt->close();
           </div>
 
           <div class="controls">
-            <input type="text" class="search-input" placeholder="🔍 Search patients by name or ID...">
+            <input type="text" class="search-input" placeholder="🔍 Search patients by name...">
             <button class="btn btn-primary" id="open-add-patient-modal">
               ➕ Add Patient
             </button>
@@ -130,7 +133,6 @@ $stmt->close();
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>Patient Name</th>
                     <th>Contact</th>
                     <th>Last Visit</th>
@@ -142,7 +144,7 @@ $stmt->close();
 $patients = $conn->query("SELECT * FROM patients ORDER BY id DESC");
 if ($patients->num_rows === 0): ?>
   <tr>
-    <td colspan="5" style="text-align:center; color:#64748b; font-style:italic;">
+    <td colspan="4" style="text-align:center; color:#64748b; font-style:italic;">
       No patient records found.
     </td>
   </tr>
@@ -154,16 +156,29 @@ else:
     data-id="<?php echo $row['id']; ?>" 
     data-email="<?php echo htmlspecialchars($row['email']); ?>" 
     data-address="<?php echo htmlspecialchars($row['address']); ?>"
+    data-last-visit="<?php echo $row['last_visit'] ? date('Y-m-d\TH:i', strtotime($row['last_visit'])) : ''; ?>"
+    data-image="<?php echo htmlspecialchars($row['patient_image'] ?? ''); ?>"
   >
-    <td>#<?php echo str_pad($row['id'], 3, '0', STR_PAD_LEFT); ?></td>
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
-        <span>👤</span>
+        <?php if (!empty($row['patient_image'])): ?>
+          <img src="<?php echo htmlspecialchars($row['patient_image']); ?>" alt="Patient" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
+        <?php else: ?>
+          <span>👤</span>
+        <?php endif; ?>
         <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong>
       </div>
     </td>
     <td><?php echo htmlspecialchars($row['contact']); ?></td>
-    <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
+    <td>
+      <?php 
+        if ($row['last_visit']) {
+          echo date('M d, Y g:i A', strtotime($row['last_visit']));
+        } else {
+          echo '<span style="color: #94a3b8;">No visit yet</span>';
+        }
+      ?>
+    </td>
     <td>
       <button class="btn btn-secondary btn-small view-patient">📋 View</button>
       <button class="btn btn-secondary btn-small edit-patient">✏️ Edit</button>
@@ -196,7 +211,6 @@ else:
               <table>
                 <thead>
                   <tr>
-                    <th>ID</th>
                     <th>Item Name</th>
                     <th>Category</th>
                     <th>Quantity</th>
@@ -218,7 +232,6 @@ else:
   while ($row = $inv->fetch_assoc()):
 ?>
   <tr data-id="<?php echo $row['id']; ?>">
-    <td>#<?php echo $row['id']; ?></td>
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span>📦</span>
@@ -341,7 +354,16 @@ else:
         <h3 class="modal-title">Add Patient</h3>
         <p class="modal-text">Fill out the patient details below.</p>
       </div>
-      <form id="add-patient-form">
+      <form id="add-patient-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Patient Photo (Optional)</label>
+          <div style="display: flex; flex-direction: column; gap: 12px;">
+            <input type="file" class="form-input" name="patient_image" id="patient-image-input" accept="image/*">
+            <div id="image-preview" style="display: none; text-align: center;">
+              <img id="preview-img" src="" alt="Preview" style="max-width: 150px; max-height: 150px; border-radius: 12px; object-fit: cover; border: 2px solid #e2e8f0;">
+            </div>
+          </div>
+        </div>
         <div class="form-group">
           <label class="form-label">Full Name</label>
           <input type="text" class="form-input" name="patient_name" required>
@@ -357,6 +379,10 @@ else:
         <div class="form-group">
           <label class="form-label">Address</label>
           <textarea class="form-input" name="address" rows="2"></textarea>
+        </div>
+        <div class="form-group" id="last-visit-group" style="display: none;">
+          <label class="form-label">Last Visit Date & Time</label>
+          <input type="datetime-local" class="form-input" name="last_visit">
         </div>
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="cancel-add-patient">Cancel</button>
@@ -389,14 +415,20 @@ else:
         <h3 class="modal-title">Patient Details</h3>
         <p class="modal-text">Full details for the selected patient.</p>
       </div>
-      <div class="card" style="margin:0; box-shadow:none;">
+      <div class="card" id="patient-details-card" style="margin:0; box-shadow:none;">
+        <div style="text-align: center; margin-bottom: 16px;" id="view-patient-image-container">
+          <img id="view-patient-image" src="" alt="Patient Photo" style="display: none; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #667eea; margin: 0 auto;">
+          <div id="view-patient-no-image" style="display: none; width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); margin: 0 auto; display: flex; align-items: center; justify-content: center; font-size: 48px; color: white;">👤</div>
+        </div>
         <div style="margin-bottom:12px;"><strong>Name:</strong> <span id="view-patient-name"></span></div>
         <div style="margin-bottom:12px;"><strong>Contact:</strong> <span id="view-patient-contact"></span></div>
         <div style="margin-bottom:12px;"><strong>Email:</strong> <span id="view-patient-email"></span></div>
         <div style="margin-bottom:12px;"><strong>Address:</strong> <span id="view-patient-address"></span></div>
+        <div style="margin-bottom:12px;"><strong>Last Visit:</strong> <span id="view-patient-last-visit"></span></div>
         <div style="margin-bottom:0; color:#64748b;"><small id="view-patient-created"></small></div>
       </div>
       <div class="modal-actions">
+        <button class="btn btn-secondary" id="export-patient-pdf">📄 Export PDF</button>
         <button class="btn btn-secondary" id="close-view-patient">Close</button>
       </div>
     </div>

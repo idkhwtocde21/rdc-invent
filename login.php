@@ -43,9 +43,10 @@ if (isset($_SESSION['user_id'])) {
           </div>
         </div>
 
+        <!-- Login Form Password Field -->
         <div class="form-group">
           <label class="form-label" for="password">Password</label>
-          <div class="input-wrapper">
+          <div class="input-wrapper" style="position: relative;">
             <input 
               type="password" 
               class="form-input" 
@@ -54,6 +55,7 @@ if (isset($_SESSION['user_id'])) {
               placeholder="Enter your password"
               required
             >
+            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
           </div>
         </div>
 
@@ -101,28 +103,36 @@ if (isset($_SESSION['user_id'])) {
           >
         </div>
 
+        <!-- Signup Form Password Field -->
         <div class="form-group">
           <label class="form-label" for="signup-password">Password</label>
-          <input 
-            type="password" 
-            class="form-input" 
-            id="signup-password"
-            name="password"
-            placeholder="Create a password"
-            required
-          >
+          <div class="input-wrapper" style="position: relative;">
+            <input 
+              type="password" 
+              class="form-input" 
+              id="signup-password"
+              name="password"
+              placeholder="Create a password"
+              required
+            >
+            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
+          </div>
         </div>
 
+        <!-- Signup Form Confirm Password Field -->
         <div class="form-group">
           <label class="form-label" for="signup-confirm">Confirm Password</label>
-          <input 
-            type="password" 
-            class="form-input" 
-            id="signup-confirm"
-            name="confirm_password"
-            placeholder="Confirm your password"
-            required
-          >
+          <div class="input-wrapper" style="position: relative;">
+            <input 
+              type="password" 
+              class="form-input" 
+              id="signup-confirm"
+              name="confirm_password"
+              placeholder="Confirm your password"
+              required
+            >
+            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
+          </div>
         </div>
 
         <button type="submit" class="btn">Create Account</button>
@@ -144,18 +154,6 @@ if (isset($_SESSION['user_id'])) {
   </div>
 
   <script src="login.js"></script>
-  <script>
-    // Toggle between login and signup forms
-    document.getElementById('show-signup').onclick = function(e) {
-      e.preventDefault();
-      document.getElementById('login-box').classList.add('hidden');
-      document.getElementById('signup-box').classList.remove('hidden');
-    };
-    document.getElementById('show-login').onclick = function(e) {
-      e.preventDefault();
-      document.getElementById('signup-box').classList.add('hidden');
-      document.getElementById('login-box').classList.remove('hidden');
-    };
-  </script>
+ 
 </body>
 </html>

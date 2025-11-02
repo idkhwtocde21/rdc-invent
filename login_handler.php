@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($username == "" || $password == "") {
-        echo json_encode(["status" => "error", "message" => "❌ All fields are required."]);
+        echo json_encode(["status" => "error", "message" => " All fields are required."]);
         exit;
     }
 
@@ -20,12 +20,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $result->fetch_assoc();
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
-            echo json_encode(["status" => "success", "message" => "✅ Login successful! Redirecting..."]);
+            echo json_encode(["status" => "success", "message" => " Login successful! Redirecting..."]);
         } else {
-            echo json_encode(["status" => "error", "message" => "❌ Incorrect password."]);
+            echo json_encode(["status" => "error", "message" => " Incorrect password."]);
         }
     } else {
-        echo json_encode(["status" => "error", "message" => "❌ User not found."]);
+        echo json_encode(["status" => "error", "message" => " User not found."]);
     }
 }
 ?>

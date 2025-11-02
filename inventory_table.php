@@ -4,7 +4,7 @@ include("db.php");
 $inv = $conn->query("SELECT * FROM inventory ORDER BY id DESC");
 if ($inv->num_rows === 0): ?>
   <tr>
-    <td colspan="6" style="text-align:center; color:#64748b; font-style:italic;">
+    <td colspan="5" style="text-align:center; color:#64748b; font-style:italic;">
       No inventory items found.
     </td>
   </tr>
@@ -13,7 +13,6 @@ else:
   while ($row = $inv->fetch_assoc()):
 ?>
   <tr data-id="<?php echo $row['id']; ?>">
-    <td>#<?php echo $row['id']; ?></td>
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span>📦</span>
