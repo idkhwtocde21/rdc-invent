@@ -168,6 +168,26 @@ document.getElementById('settings-form').addEventListener('submit', (e) => {
   hideNotification();
 });
 
+// Password visibility toggle for settings
+const toggleSettingsPassword = document.getElementById('toggle-settings-password');
+const settingsPasswordInput = document.getElementById('settings-password');
+
+if (toggleSettingsPassword && settingsPasswordInput) {
+  toggleSettingsPassword.addEventListener('click', function() {
+    const type = settingsPasswordInput.getAttribute('type');
+    
+    if (type === 'password') {
+      settingsPasswordInput.setAttribute('type', 'text');
+      toggleSettingsPassword.classList.add('active');
+      toggleSettingsPassword.querySelector('.eye-icon').textContent = '👁️‍🗨️';
+    } else {
+      settingsPasswordInput.setAttribute('type', 'password');
+      toggleSettingsPassword.classList.remove('active');
+      toggleSettingsPassword.querySelector('.eye-icon').textContent = '👁️';
+    }
+  });
+}
+
 // Confirm save settings
 confirmSaveSettings.addEventListener('click', () => {
   if (pendingSettingsData) {

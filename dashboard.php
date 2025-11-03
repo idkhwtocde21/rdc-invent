@@ -104,7 +104,12 @@ $stmt->close();
                   New Password 
                   <span class="form-small">(leave blank to keep current)</span>
                 </label>
-                <input type="password" class="form-input" placeholder="Enter new password" name="password">
+                <div style="position: relative;">
+                  <input type="password" class="form-input" placeholder="Enter new password" name="password" id="settings-password">
+                  <button type="button" class="password-toggle" id="toggle-settings-password" aria-label="Toggle password visibility">
+                    <span class="eye-icon">👁️</span>
+                  </button>
+                </div>
               </div>
 
               <button type="submit" class="btn btn-primary">

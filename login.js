@@ -108,16 +108,21 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   });
 
-  // Password visibility toggle
-  document.querySelectorAll('.toggle-password').forEach(btn => {
+  // Password visibility toggle - FIXED VERSION
+  document.querySelectorAll('.password-toggle').forEach(btn => {
     btn.addEventListener('click', function() {
-      const input = this.parentElement.querySelector('input[type="password"], input[type="text"]');
+      const inputWrapper = this.parentElement;
+      const input = inputWrapper.querySelector('input[type="password"], input[type="text"]');
+      const eyeIcon = this.querySelector('.eye-icon');
+      
       if (input.type === 'password') {
         input.type = 'text';
-        this.textContent = '🙈';
+        this.classList.add('active');
+        eyeIcon.textContent = '👁️‍🗨️';
       } else {
         input.type = 'password';
-        this.textContent = '👁️';
+        this.classList.remove('active');
+        eyeIcon.textContent = '👁️';
       }
     });
   });

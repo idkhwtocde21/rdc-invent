@@ -45,17 +45,18 @@ if (isset($_SESSION['user_id'])) {
 
         <!-- Login Form Password Field -->
         <div class="form-group">
-          <label class="form-label" for="password">Password</label>
-          <div class="input-wrapper" style="position: relative;">
+          <label class="form-label">Password</label>
+          <div class="input-wrapper">
             <input 
               type="password" 
               class="form-input" 
-              id="password" 
               name="password"
               placeholder="Enter your password"
               required
             >
-            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
+            <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+              <span class="eye-icon">👁️</span>
+            </button>
           </div>
         </div>
 
@@ -106,7 +107,7 @@ if (isset($_SESSION['user_id'])) {
         <!-- Signup Form Password Field -->
         <div class="form-group">
           <label class="form-label" for="signup-password">Password</label>
-          <div class="input-wrapper" style="position: relative;">
+          <div class="input-wrapper">
             <input 
               type="password" 
               class="form-input" 
@@ -115,14 +116,16 @@ if (isset($_SESSION['user_id'])) {
               placeholder="Create a password"
               required
             >
-            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
+            <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+              <span class="eye-icon">👁️</span>
+            </button>
           </div>
         </div>
 
         <!-- Signup Form Confirm Password Field -->
         <div class="form-group">
           <label class="form-label" for="signup-confirm">Confirm Password</label>
-          <div class="input-wrapper" style="position: relative;">
+          <div class="input-wrapper">
             <input 
               type="password" 
               class="form-input" 
@@ -131,7 +134,9 @@ if (isset($_SESSION['user_id'])) {
               placeholder="Confirm your password"
               required
             >
-            <button type="button" class="toggle-password" tabindex="-1" style="position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; font-size: 18px; cursor: pointer;">👁️</button>
+            <button type="button" class="password-toggle" aria-label="Toggle password visibility">
+              <span class="eye-icon">👁️</span>
+            </button>
           </div>
         </div>
 
