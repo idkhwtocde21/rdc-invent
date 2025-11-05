@@ -54,15 +54,18 @@ function showNotification(message, type = 'success') {
   const notificationText = document.getElementById('notification-text');
   const notificationIcon = document.getElementById('notification-icon');
   
+  // Clear previous timeout
   if (notificationTimeout) {
     clearTimeout(notificationTimeout);
   }
 
+  // Ensure visible immediately
   notificationText.textContent = message;
   notificationIcon.textContent = type === 'success' ? '✓' : '✕';
   notification.className = 'notification show ' + type;
   notification.style.display = 'flex';
 
+  // Hide after 3000ms with animation
   notificationTimeout = setTimeout(() => {
     hideNotification();
   }, 3000);
@@ -72,17 +75,27 @@ function hideNotification() {
   const notification = document.getElementById('notification');
   if (!notification) return;
   
+  // Clear timeout
   if (notificationTimeout) {
     clearTimeout(notificationTimeout);
     notificationTimeout = null;
   }
   
+  // Add hide animation
   notification.classList.remove('show');
+  notification.classList.add('hide');
   
+  // After animation completes, fully hide
   setTimeout(() => {
     notification.style.display = 'none';
-    notification.classList.remove('success', 'error');
-  }, 300);
+    notification.classList.remove('hide', 'success', 'error');
+    
+    // Reset icon/text
+    const notificationText = document.getElementById('notification-text');
+    const notificationIcon = document.getElementById('notification-icon');
+    if (notificationText) notificationText.textContent = '';
+    if (notificationIcon) notificationIcon.textContent = '';
+  }, 400);
 }
 
 // Admin Settings Form Handler
@@ -198,8 +211,9 @@ const addUserForm = document.getElementById('add-user-form');
 addUserBtn.addEventListener('click', () => {
   addUserForm.reset();
   delete addUserForm.dataset.editId;
-  // Reset modal title
+  // Reset modal title and button text
   document.querySelector('#add-user-modal .modal-title').textContent = 'Add New User';
+  document.querySelector('#add-user-form .btn-primary').textContent = 'Add User';
   // Make password required for new user
   addUserForm.querySelector('[name="password"]').setAttribute('required', 'required');
   addUserModal.classList.add('show');
@@ -248,15 +262,21 @@ addUserForm.addEventListener('submit', function(e) {
   })
   .then(res => res.json())
   .then(data => {
+    console.log('Add/Edit user response:', data);
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
+      console.log('Add/Edit successful, will refresh table...');
       addUserForm.reset();
       addUserModal.classList.remove('show');
       delete addUserForm.dataset.editId;
-      refreshUsersTable(currentFilter);
+      // Force refresh the table
+      setTimeout(() => {
+        refreshUsersTable(currentFilter);
+      }, 100);
     }
   })
-  .catch(() => {
+  .catch((error) => {
+    console.error('Error:', error);
     showNotification('Server error. Please try again.', 'error');
   });
 });
@@ -275,16 +295,33 @@ cancelDeleteUser.addEventListener('click', () => {
 
 confirmDeleteUser.addEventListener('click', () => {
   if (deleteUserId) {
+    console.log('=== DELETE USER INITIATED ===');
+    console.log('Deleting user ID:', deleteUserId);
+    
     fetch('admin_delete_user.php', {
       method: 'POST',
       body: new URLSearchParams({id: deleteUserId})
     })
     .then(res => res.json())
     .then(data => {
+      console.log('Delete response:', data);
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
+      deleteUserModal.classList.remove('show');
       if (data.status === 'success') {
-        refreshUsersTable(currentFilter);
+        console.log('Delete successful, will refresh table...');
+        deleteUserId = null;
+        // Force refresh the table
+        setTimeout(() => {
+          refreshUsersTable(currentFilter);
+        }, 100);
+      } else {
+        console.log('Delete failed');
+        deleteUserId = null;
       }
+    })
+    .catch(error => {
+      console.error('Error deleting user:', error);
+      showNotification('Server error. Please try again.', 'error');
       deleteUserModal.classList.remove('show');
       deleteUserId = null;
     });
@@ -364,8 +401,9 @@ function attachUserRowEvents() {
       // Make password optional for edit
       addUserForm.querySelector('[name="password"]').removeAttribute('required');
       
-      // Update modal title
+      // Update modal title and button text
       document.querySelector('#add-user-modal .modal-title').textContent = 'Edit User';
+      document.querySelector('#add-user-form .btn-primary').textContent = 'Update User';
       
       addUserModal.classList.add('show');
       hideNotification();
@@ -389,11 +427,100 @@ attachUserRowEvents();
 
 // Refresh Users Table
 function refreshUsersTable(filter = 'all') {
-  fetch(`admin_users_table.php?filter=${filter}`)
-    .then(res => res.text())
+  console.log('=== REFRESH USERS TABLE CALLED ===');
+  console.log('Filter:', filter);
+  
+  const tbody = document.getElementById('users-table-body');
+  if (!tbody) {
+    console.error('ERROR: Table body element not found!');
+    return;
+  }
+  
+  console.log('Table body found, fetching data...');
+  
+  // Add timestamp to prevent caching
+  const timestamp = new Date().getTime();
+  const url = `admin_users_table.php?filter=${filter}&t=${timestamp}`;
+  console.log('Fetch URL:', url);
+  
+  fetch(url)
+    .then(res => {
+      console.log('Response received. Status:', res.status, res.statusText);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      return res.text();
+    })
     .then(html => {
-      document.getElementById('users-table-body').innerHTML = html;
+      console.log('HTML received. Length:', html.length);
+      console.log('First 200 chars:', html.substring(0, 200));
+      
+      tbody.innerHTML = html;
+      console.log('Table body updated with new HTML');
+      
       attachUserRowEvents();
+      console.log('Event handlers reattached');
+      
+      // Refresh statistics after table update
+      refreshStatistics();
+      
+      console.log('=== REFRESH COMPLETE ===');
+    })
+    .catch(error => {
+      console.error('=== REFRESH FAILED ===');
+      console.error('Error:', error);
+      showNotification('Failed to refresh users table.', 'error');
+    });
+}
+
+// Refresh Statistics (counts)
+function refreshStatistics() {
+  console.log('Refreshing statistics...');
+  const timestamp = new Date().getTime();
+  
+  fetch(`admin_get_stats.php?t=${timestamp}`)
+    .then(res => res.json())
+    .then(data => {
+      if (data.status === 'success') {
+        const stats = data.data;
+        console.log('Statistics received:', stats);
+        
+        // Update filter tab counts
+        const allUsersTab = document.querySelector('.filter-tab[data-filter="all"] .tab-count');
+        const staffTab = document.querySelector('.filter-tab[data-filter="staff"] .tab-count');
+        const adminTab = document.querySelector('.filter-tab[data-filter="admin"] .tab-count');
+        
+        if (allUsersTab) allUsersTab.textContent = stats.total_users;
+        if (staffTab) staffTab.textContent = stats.total_staff;
+        if (adminTab) adminTab.textContent = stats.total_admins;
+        
+        // Update overview section statistics
+        const overviewStats = document.querySelectorAll('.stat-card');
+        overviewStats.forEach((card, index) => {
+          const statNumber = card.querySelector('.stat-number');
+          if (statNumber) {
+            switch(index) {
+              case 0: // Staff Members
+                statNumber.textContent = stats.total_staff;
+                break;
+              case 1: // Administrators
+                statNumber.textContent = stats.total_admins;
+                break;
+              case 2: // Total Patients
+                statNumber.textContent = stats.total_patients;
+                break;
+              case 3: // Low Stock Items
+                statNumber.textContent = stats.low_stock;
+                break;
+            }
+          }
+        });
+        
+        console.log('Statistics updated successfully');
+      }
+    })
+    .catch(error => {
+      console.error('Error refreshing statistics:', error);
     });
 }
 

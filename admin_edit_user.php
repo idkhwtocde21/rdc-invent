@@ -78,7 +78,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "✓ User updated successfully!"]);
+        echo json_encode(["status" => "success", "message" => " User updated successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to update user."]);
     }

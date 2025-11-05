@@ -2,9 +2,14 @@
 session_start();
 include("db.php");
 
+// Prevent caching
+header('Cache-Control: no-cache, no-store, must-revalidate');
+header('Pragma: no-cache');
+header('Expires: 0');
+
 // Check if user is logged in and is admin
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 2) {
-    echo json_encode(["status" => "error", "message" => "Unauthorized access."]);
+    echo '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #ef4444;">Unauthorized access.</td></tr>';
     exit;
 }
 

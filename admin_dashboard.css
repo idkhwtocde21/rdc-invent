@@ -70,8 +70,8 @@ body {
 }
 
 .logo-img {
-  width: 80px;
-  height: 80px;
+  width: 170px;
+  height: 120px;
   object-fit: contain;
   filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3));
   transition: transform 0.3s ease;
@@ -676,6 +676,34 @@ body {
   flex: 1;
 }
 
+/* Notification animations - Enhanced */
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px) scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes slideOutRight {
+  from {
+    transform: translateX(0) scale(1);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(400px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateX(0) scale(1); }
+  50% { transform: translateX(-10px) scale(1.05); }
+}
+
 /* Notification */
 .notification {
   position: fixed;
@@ -684,28 +712,23 @@ body {
   background: white;
   padding: 16px 24px;
   border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   display: none;
   align-items: center;
   gap: 12px;
   z-index: 2000;
   min-width: 300px;
-  animation: slideIn 0.3s ease;
-}
-
-@keyframes slideIn {
-  from {
-    transform: translateX(400px);
-    opacity: 0;
-  }
-  to {
-    transform: translateX(0);
-    opacity: 1;
-  }
+  opacity: 0;
+  transform: translateX(400px) scale(0.8);
 }
 
 .notification.show {
   display: flex;
+  animation: slideInRight 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.notification.hide {
+  animation: slideOutRight 0.4s ease-in forwards;
 }
 
 .notification.success {
@@ -718,20 +741,67 @@ body {
 
 .notification-icon {
   font-size: 24px;
+  font-weight: bold;
 }
 
 .notification.success .notification-icon {
   color: #10b981;
+  animation: bounce 0.6s ease 0.3s;
 }
 
 .notification.error .notification-icon {
   color: #ef4444;
+  animation: bounce 0.6s ease 0.3s;
 }
 
 .notification-text {
   flex: 1;
   font-weight: 500;
   color: #1e293b;
+}
+
+/* Responsive Notification */
+@media (max-width: 600px) {
+  @keyframes slideInDown {
+    from {
+      transform: translate(-50%, -100px) scale(0.8);
+      opacity: 0;
+    }
+    to {
+      transform: translate(-50%, 0) scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideOutUp {
+    from {
+      transform: translate(-50%, 0) scale(1);
+      opacity: 1;
+    }
+    to {
+      transform: translate(-50%, -100px) scale(0.8);
+      opacity: 0;
+    }
+  }
+
+  .notification {
+    left: 50%;
+    right: auto;
+    top: 16px;
+    transform: translate(-50%, -100px) scale(0.8);
+    width: 90vw;
+    max-width: 340px;
+    justify-content: center;
+    padding: 12px 8px;
+  }
+
+  .notification.show {
+    animation: slideInDown 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  .notification.hide {
+    animation: slideOutUp 0.4s ease-in forwards;
+  }
 }
 
 /* Info Group Styles */

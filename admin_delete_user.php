@@ -28,7 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "✓ User deleted successfully!"]);
+        echo json_encode(["status" => "success", "message" => " User deleted successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to delete user."]);
     }

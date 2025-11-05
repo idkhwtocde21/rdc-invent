@@ -70,7 +70,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($stmt->execute()) {
         $roleText = $role == 2 ? 'Admin' : 'Staff';
-        echo json_encode(["status" => "success", "message" => "✓ $roleText added successfully!"]);
+        echo json_encode(["status" => "success", "message" => " $roleText added successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to add user."]);
     }

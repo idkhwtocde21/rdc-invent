@@ -68,7 +68,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->execute()) {
         $_SESSION['username'] = $username;
         $_SESSION['email'] = $email;
-        echo json_encode(["status" => "success", "message" => "✓ Settings updated successfully!"]);
+        echo json_encode(["status" => "success", "message" => " Settings updated successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to update settings."]);
     }

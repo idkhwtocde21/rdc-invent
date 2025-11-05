@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($username == "" || $password == "") {
-        echo json_encode(["status" => "error", "message" => "✕ Username and password are required."]);
+        echo json_encode(["status" => "error", "message" => " Username and password are required."]);
         exit;
     }
 
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ]);
     } else {
         $stmt->close();
-        echo json_encode(["status" => "error", "message" => "✕ Invalid username or password."]);
+        echo json_encode(["status" => "error", "message" => " Invalid username or password."]);
     }
 }
 ?>
