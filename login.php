@@ -1,9 +1,13 @@
 <?php 
 session_start();
 
-// Redirect to dashboard if already logged in
+// Redirect to appropriate dashboard if already logged in
 if (isset($_SESSION['user_id'])) {
-    header("Location: dashboard.php");
+    if ($_SESSION['role'] == 2) {
+        header("Location: admin_dashboard.php");
+    } else {
+        header("Location: dashboard.php");
+    }
     exit;
 }
 ?>
@@ -23,7 +27,9 @@ if (isset($_SESSION['user_id'])) {
     <!-- Login Form -->
     <div class="login-card" id="login-box">
       <div class="header">
-        <div class="logo">🦷</div>
+        <div class="logo">
+        <img src="logos/rom_logo.png" alt="Romero's Dental Clinic Logo" class="logo-img">
+        </div>
         <h1 class="title">Welcome Back</h1>
         <p class="subtitle">Romero's Dental Clinic</p>
       </div>
@@ -74,7 +80,9 @@ if (isset($_SESSION['user_id'])) {
     <!-- Signup Form -->
     <div class="login-card hidden" id="signup-box">
       <div class="header">
-        <div class="logo">🦷</div>
+        <div class="logo">
+        <img src="logos/rom_logo.png" alt="Romero's Dental Clinic Logo" class="logo-img">
+        </div>
         <h1 class="title">Create Account</h1>
         <p class="subtitle">Join Romero's Dental Clinic</p>
       </div>

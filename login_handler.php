@@ -7,11 +7,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
 
     if ($username == "" || $password == "") {
-        echo json_encode(["status" => "error", "message" => " All fields are required."]);
+        echo json_encode(["status" => "error", "message" => "✕ All fields are required."]);
         exit;
     }
 
-    $query = $conn->prepare("SELECT id, username, password FROM users WHERE username=? OR email=? LIMIT 1");
+    // Updated query to include email and role
+    $query = $conn->prepare("SELECT id, username, email, password, role FROM users WHERE username=? OR email=? LIMIT 1");
     $query->bind_param("ss", $username, $username);
     $query->execute();
     $result = $query->get_result();
@@ -20,7 +21,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $user = $result->fetch_assoc();
         if (password_verify($password, $user['password'])) {
             $_SESSION['user_id'] = $user['id'];
-            echo json_encode(["status" => "success", "message" => " Login successful! Redirecting..."]);
+            $_SESSION['username'] = $user['username'];
+            $_SESSION['email'] = $user['email'];
+            $_SESSION['role'] = $user['role']; // Store role in session
+            
+            // Redirect based on role
+            $redirect_url = ($user['role'] == 2) ? 'admin_dashboard.php' : 'dashboard.php';
+            
+            echo json_encode([
+                "status" => "success", 
+                "message" => " Login successful! Redirecting...",
+                "redirect" => $redirect_url
+            ]);
         } else {
             echo json_encode(["status" => "error", "message" => " Incorrect password."]);
         }

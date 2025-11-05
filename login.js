@@ -61,7 +61,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }
 
-  // Login Form Handler
+  // Login Form Handler - UPDATED
   document.getElementById('loginForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(document.getElementById('loginForm'));
@@ -75,16 +75,16 @@ document.addEventListener('DOMContentLoaded', function() {
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       if (data.status === 'success') {
         setTimeout(() => {
-          window.location.href = 'dashboard.php';
-        }, 2500);
+          window.location.href = data.redirect; // Use dynamic redirect
+        }, 1500);
       }
     })
     .catch(() => {
-      showNotification('Server error. Please try again.', 'error');
+      showNotification('✕ Server error. Please try again.', 'error');
     });
   });
 
-  // Signup Form Handler - FIXED THIS SECTION
+  // Signup Form Handler
   document.getElementById('signupForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const formData = new FormData(document.getElementById('signupForm'));
@@ -94,7 +94,7 @@ document.addEventListener('DOMContentLoaded', function() {
       body: formData
     })
     .then(res => res.json())
-    .then(data => {  // Fixed: Added proper arrow function syntax
+    .then(data => {
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       if (data.status === 'success') {
         document.getElementById('signupForm').reset();
@@ -104,11 +104,11 @@ document.addEventListener('DOMContentLoaded', function() {
       }
     })
     .catch(() => {
-      showNotification('Server error. Please try again.', 'error');
+      showNotification('✕ Server error. Please try again.', 'error');
     });
   });
 
-  // Password visibility toggle - FIXED VERSION
+  // Password visibility toggle
   document.querySelectorAll('.password-toggle').forEach(btn => {
     btn.addEventListener('click', function() {
       const inputWrapper = this.parentElement;

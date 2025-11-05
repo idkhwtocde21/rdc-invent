@@ -25,16 +25,20 @@ $stmt->close();
   <title>Dashboard - Romero's Dental Clinic</title>
   <link rel="stylesheet" href="dashboard.css">
   <link rel="icon" type="image" href="logos/rom_logo.png">
+
   <!-- Add jsPDF and html2canvas for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
 </head>
 <body>
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <div class="sidebar-logo">🦷</div>
+        <div class="sidebar-logo">
+        <img src="logos/rom_logo.png" alt="Romero's Dental Clinic Logo" class="logo-img">
+        </div>
         <div class="sidebar-title">Romero's Clinic</div>
         <div class="sidebar-subtitle">Dental Management</div>
       </div>
@@ -145,6 +149,7 @@ $stmt->close();
                   </tr>
                 </thead>
                 <tbody id="patient-table-body">
+
 <?php
 $patients = $conn->query("SELECT * FROM patients ORDER BY id DESC");
 if ($patients->num_rows === 0): ?>
@@ -154,6 +159,7 @@ if ($patients->num_rows === 0): ?>
     </td>
   </tr>
 <?php
+
 else:
   while ($row = $patients->fetch_assoc()):
 ?>
@@ -190,6 +196,7 @@ else:
       <button class="btn btn-danger btn-small delete-patient">🗑️ Delete</button>
     </td>
   </tr>
+
 <?php endwhile; endif; ?>
                 </tbody>
               </table>
@@ -224,6 +231,8 @@ else:
                   </tr>
                 </thead>
                 <tbody id="inventory-table-body">
+
+                  
 <?php
 $inv = $conn->query("SELECT * FROM inventory ORDER BY id DESC");
 if ($inv->num_rows === 0): ?>
@@ -232,6 +241,7 @@ if ($inv->num_rows === 0): ?>
       No inventory items found.
     </td>
   </tr>
+
 <?php
 else:
   while ($row = $inv->fetch_assoc()):
@@ -246,6 +256,7 @@ else:
     <td><?php echo htmlspecialchars($row['category']); ?></td>
     <td><?php echo $row['quantity']; ?></td>
     <td>
+
       <?php
         $status = $row['status'];
         $color = $status === 'Available' ? '#10b981' : ($status === 'Low Stock' ? '#f59e0b' : '#ef4444');
@@ -258,6 +269,7 @@ else:
       <button class="btn btn-danger btn-small delete-inventory">🗑️ Delete</button>
     </td>
   </tr>
+
 <?php endwhile; endif; ?>
                 </tbody>
               </table>

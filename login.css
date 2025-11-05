@@ -79,14 +79,23 @@ body {
 }
 
 .logo {
-  font-size: 56px;
   margin-bottom: 16px;
   animation: bounce 1s ease-in-out;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.logo-img {
+  width: 190px;
+  height: 130px;
+  object-fit: contain;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+  transition: transform 0.3s ease;
+}
+
+.logo-img:hover {
+  transform: scale(1.05);
 }
 
 .title {
