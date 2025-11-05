@@ -1,0 +1,91 @@
+// Create Database pag wala!!! kayo na bahala mag testing.
+
+CREATE DATABASE IF NOT EXISTS rdc;
+USE rdc;
+
+-- Users Table (for both Staff and Admin)
+
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  username VARCHAR(50) NOT NULL UNIQUE,
+  email VARCHAR(100) NOT NULL UNIQUE,
+  password VARCHAR(255) NOT NULL,
+  role TINYINT NOT NULL DEFAULT 1 COMMENT '1=Staff, 2=Admin',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_username (username),
+  INDEX idx_email (email),
+  INDEX idx_role (role)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Patients Table
+
+CREATE TABLE IF NOT EXISTS patients (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  patient_name VARCHAR(100) NOT NULL,
+  contact VARCHAR(20) NOT NULL,
+  last_visit DATETIME DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_patient_name (patient_name),
+  INDEX idx_contact (contact),
+  INDEX idx_last_visit (last_visit)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Inventory Table
+
+CREATE TABLE IF NOT EXISTS inventory (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  item_name VARCHAR(100) NOT NULL,
+  category VARCHAR(50) NOT NULL,
+  quantity INT NOT NULL DEFAULT 0,
+  status ENUM('Available', 'Low Stock', 'Out of Stock') DEFAULT 'Available',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_item_name (item_name),
+  INDEX idx_category (category),
+  INDEX idx_status (status)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+// SAMPLE USERS
+
+-- Insert Default Admin Account
+
+INSERT INTO users (username, email, password, role) VALUES
+('admin', 'admin@rdc.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 2)
+ON DUPLICATE KEY UPDATE username=username;
+-- Default password is 'password' (hashed)
+
+-- Insert Sample Staff Account
+
+INSERT INTO users (username, email, password, role) VALUES
+('staff01', 'staff@rdc.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 1)
+ON DUPLICATE KEY UPDATE username=username;
+-- Default password is 'password' (hashed)
+
+-- Insert Sample Patients
+
+INSERT INTO patients (patient_name, contact, last_visit) VALUES
+('Juan Dela Cruz', '09123456789', '2025-11-03 10:30:00'),
+('Maria Santos', '09234567890', '2025-11-02 14:15:00'),
+('Pedro Reyes', '09345678901', '2025-10-28 09:00:00'),
+('Ana Garcia', '09456789012', '2025-10-25 16:45:00'),
+('Jose Rodriguez', '09567890123', '2025-10-20 11:20:00')
+ON DUPLICATE KEY UPDATE patient_name=VALUES(patient_name);
+
+-- Insert Sample Inventory Items
+
+INSERT INTO inventory (item_name, category, quantity, status) VALUES
+('Dental Gloves (Box)', 'Consumables', 50, 'Available'),
+('Face Masks (Box)', 'Consumables', 35, 'Available'),
+('Dental Mirror', 'Instruments', 25, 'Available'),
+('Dental Explorer', 'Instruments', 20, 'Available'),
+('Anesthetic Solution', 'Medication', 15, 'Available'),
+('Cotton Rolls', 'Consumables', 8, 'Low Stock'),
+('Dental Burs', 'Instruments', 12, 'Available'),
+('Fluoride Gel', 'Medication', 5, 'Low Stock'),
+('Suction Tips', 'Consumables', 0, 'Out of Stock'),
+('X-Ray Film', 'Equipment', 18, 'Available')
+ON DUPLICATE KEY UPDATE item_name=VALUES(item_name);
+
+//
