@@ -22,8 +22,41 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body>
 
+  <!-- Hero Section -->
+  <div class="hero-section" id="hero-section">
+    <div class="hero-content">
+      <div class="hero-logo">
+        <img src="logos/rom_logo.png" alt="Romero's Dental Clinic Logo" class="hero-logo-img">
+      </div>
+      <h1 class="hero-title">Romero's Dental Clinic</h1>
+      <p class="hero-subtitle">Your Smile, Our Priority</p>
+      <p class="hero-description">Professional dental care with compassion and excellence. Join us in creating healthy, beautiful smiles.</p>
+      <button class="hero-btn" id="goto-login">
+        <span>Get Started</span>
+        <span class="arrow">→</span>
+      </button>
+    </div>
+    <div class="hero-features">
+      <div class="feature-card">
+        <span class="feature-icon">🦷</span>
+        <h3>Expert Care</h3>
+        <p>Experienced professionals</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">✨</span>
+        <h3>Modern Tech</h3>
+        <p>State-of-the-art equipment</p>
+      </div>
+      <div class="feature-card">
+        <span class="feature-icon">❤️</span>
+        <h3>Patient First</h3>
+        <p>Compassionate service</p>
+      </div>
+    </div>
+  </div>
+
   <!-- Main Container -->
-  <div class="container">
+  <div class="container hidden" id="login-container">
     <!-- Login Form -->
     <div class="login-card" id="login-box">
       <div class="header">
@@ -159,6 +192,11 @@ if (isset($_SESSION['user_id'])) {
       </div>
     </div>
   </div>
+
+  <!-- Back to Hero Button -->
+  <button class="back-to-hero hidden" id="back-to-hero">
+    <span>←</span>
+  </button>
 
   <!-- Notification -->
   <div class="notification" id="notification">

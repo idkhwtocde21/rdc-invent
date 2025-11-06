@@ -1,4 +1,23 @@
 document.addEventListener('DOMContentLoaded', function() {
+  // Hero section navigation
+  const heroSection = document.getElementById('hero-section');
+  const loginContainer = document.getElementById('login-container');
+  const backToHeroBtn = document.getElementById('back-to-hero');
+  const gotoLoginBtn = document.getElementById('goto-login');
+
+  gotoLoginBtn.addEventListener('click', () => {
+    heroSection.classList.add('hidden');
+    loginContainer.classList.remove('hidden');
+    backToHeroBtn.classList.remove('hidden');
+  });
+
+  backToHeroBtn.addEventListener('click', () => {
+    loginContainer.classList.add('hidden');
+    backToHeroBtn.classList.add('hidden');
+    heroSection.classList.remove('hidden');
+    hideNotification();
+  });
+
   // Toggle between login and signup
   document.getElementById('show-signup').addEventListener('click', (e) => {
     e.preventDefault();
