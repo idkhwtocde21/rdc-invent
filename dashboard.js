@@ -23,13 +23,31 @@ navLinks.forEach(link => {
   });
 });
 
+// User Dropdown Menu Toggle
+const userMenuToggle = document.getElementById('user-menu-toggle');
+const userDropdown = document.querySelector('.user-dropdown');
+
+userMenuToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userMenuToggle.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!userMenuToggle.contains(e.target)) {
+    userMenuToggle.classList.remove('active');
+  }
+});
+
 // Logout Modal
 const logoutBtn = document.getElementById('logout-btn');
 const logoutModal = document.getElementById('logout-modal');
 const confirmLogout = document.getElementById('confirm-logout');
 const cancelLogout = document.getElementById('cancel-logout');
 
-logoutBtn.addEventListener('click', () => {
+logoutBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userMenuToggle.classList.remove('active');
   logoutModal.classList.add('show');
 });
 
@@ -378,14 +396,15 @@ addInventoryForm.addEventListener('submit', function(e) {
   const quantity = addInventoryForm.quantity.value.trim();
   const status = addInventoryForm.status.value.trim();
 
-  if (!itemName || !category || !quantity || !status || Number(quantity) < 0) {
+  // Basic validation
+  if (!itemName || !category || quantity === '' || !status) {
     if (!itemName) {
       addInventoryForm.item_name.classList.add('error');
       addInventoryForm.item_name.focus();
     } else if (!category) {
       addInventoryForm.category.classList.add('error');
       addInventoryForm.category.focus();
-    } else if (!quantity || Number(quantity) < 0) {
+    } else if (quantity === '') {
       addInventoryForm.quantity.classList.add('error');
       addInventoryForm.quantity.focus();
     } else {
@@ -395,9 +414,28 @@ addInventoryForm.addEventListener('submit', function(e) {
     return;
   }
 
-  if (status === 'Out of Stock' && Number(quantity) !== 0) {
+  const quantityNum = Number(quantity);
+
+  // Quantity must be non-negative
+  if (quantityNum < 0) {
+    addInventoryForm.quantity.classList.add('error');
+    showNotification('Quantity cannot be negative.', 'error');
+    addInventoryForm.quantity.focus();
+    return;
+  }
+
+  // If status is "Out of Stock", quantity must be 0
+  if (status === 'Out of Stock' && quantityNum !== 0) {
     addInventoryForm.quantity.classList.add('error');
     showNotification('Quantity must be 0 when status is "Out of Stock".', 'error');
+    addInventoryForm.quantity.focus();
+    return;
+  }
+
+  // If status is NOT "Out of Stock", quantity must be at least 1
+  if (status !== 'Out of Stock' && quantityNum < 1) {
+    addInventoryForm.quantity.classList.add('error');
+    showNotification('Quantity must be at least 1 when item is in stock.', 'error');
     addInventoryForm.quantity.focus();
     return;
   }

@@ -24,13 +24,31 @@ navLinks.forEach(link => {
   });
 });
 
+// User Dropdown Menu Toggle
+const userMenuToggle = document.getElementById('user-menu-toggle');
+const userDropdown = document.querySelector('.user-dropdown');
+
+userMenuToggle.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userMenuToggle.classList.toggle('active');
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!userMenuToggle.contains(e.target)) {
+    userMenuToggle.classList.remove('active');
+  }
+});
+
 // Logout Modal
 const logoutBtn = document.getElementById('logout-btn');
 const logoutModal = document.getElementById('logout-modal');
 const confirmLogout = document.getElementById('confirm-logout');
 const cancelLogout = document.getElementById('cancel-logout');
 
-logoutBtn.addEventListener('click', () => {
+logoutBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  userMenuToggle.classList.remove('active');
   logoutModal.classList.add('show');
 });
 

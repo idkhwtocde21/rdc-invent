@@ -50,6 +50,32 @@ if (isset($_FILES['patient_image']) && $_FILES['patient_image']['error'] === UPL
 }
 
 if ($id && $patient_name && $contact) {
+    // Patient name validation: minimum 2 characters, letters and spaces only
+    if (strlen($patient_name) < 2) {
+        echo json_encode(["status" => "error", "message" => "Patient name must be at least 2 characters."]);
+        exit;
+    }
+    if (!preg_match('/^[a-zA-Z\s.]+$/', $patient_name)) {
+        echo json_encode(["status" => "error", "message" => "Patient name can only contain letters, spaces, and periods."]);
+        exit;
+    }
+    
+    // Contact validation: numbers, spaces, hyphens, parentheses, plus sign
+    if (strlen($contact) < 7) {
+        echo json_encode(["status" => "error", "message" => "Contact number must be at least 7 characters."]);
+        exit;
+    }
+    if (!preg_match('/^[0-9\s\-\(\)\+]+$/', $contact)) {
+        echo json_encode(["status" => "error", "message" => "Contact number contains invalid characters."]);
+        exit;
+    }
+    
+    // Email validation if provided
+    if ($email !== "" && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        echo json_encode(["status" => "error", "message" => "Invalid email format."]);
+        exit;
+    }
+    
     // Build query based on what fields are being updated
     if ($patient_image && $last_visit) {
         $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, last_visit=?, patient_image=? WHERE id=?");

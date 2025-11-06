@@ -21,6 +21,23 @@ if (isset($_SESSION['user_id'])) {
   <link rel="icon" type="image" href="logos/rom_logo.png">
 </head>
 <body>
+  
+  <!-- Animated Background -->
+  <div class="bg-animation">
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+    <span></span>
+  </div>
+
+  <!-- Geometric Shapes Background -->
+  <div class="bg-shapes">
+    <div class="shape shape-circle"></div>
+    <div class="shape shape-square"></div>
+    <div class="shape shape-triangle"></div>
+  </div>
 
   <!-- Hero Section -->
   <div class="hero-section" id="hero-section">
@@ -41,11 +58,6 @@ if (isset($_SESSION['user_id'])) {
         <span class="feature-icon">🦷</span>
         <h3>Expert Care</h3>
         <p>Experienced professionals</p>
-      </div>
-      <div class="feature-card">
-        <span class="feature-icon">✨</span>
-        <h3>Modern Tech</h3>
-        <p>State-of-the-art equipment</p>
       </div>
       <div class="feature-card">
         <span class="feature-icon">❤️</span>

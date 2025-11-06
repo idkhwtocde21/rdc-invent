@@ -81,10 +81,6 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
       </nav>
 
       <div class="sidebar-footer">
-        <button class="logout-btn" id="logout-btn">
-          <span>🚪</span>
-          <span>Logout</span>
-        </button>
       </div>
     </aside>
 
@@ -93,10 +89,24 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
       <!-- Top Bar -->
       <header class="topbar">
         <h1 class="topbar-title">Admin Dashboard</h1>
-        <div class="topbar-user">
+        <div class="topbar-user" id="user-menu-toggle">
           <div class="user-avatar"><?php echo strtoupper(substr($username, 0, 2)); ?></div>
           <span><?php echo htmlspecialchars($username); ?></span>
           <span class="admin-badge">Admin</span>
+          
+          <!-- Dropdown Menu -->
+          <div class="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name"><?php echo htmlspecialchars($username); ?></div>
+              <div class="user-dropdown-email"><?php echo htmlspecialchars($email); ?></div>
+            </div>
+            <div class="user-dropdown-menu">
+              <button class="user-dropdown-item logout" id="logout-btn">
+                <span class="dropdown-icon">🚪</span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
       </header>
 

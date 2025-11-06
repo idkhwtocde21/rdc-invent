@@ -62,12 +62,6 @@ $stmt->close();
             <span>Inventory</span>
           </div>
         </li>
-        <li class="nav-item" style="margin-top: auto;">
-          <div class="nav-link" id="logout-btn">
-            <span class="nav-icon">🚪</span>
-            <span>Logout</span>
-          </div>
-        </li>
       </ul>
     </aside>
 
@@ -76,9 +70,23 @@ $stmt->close();
       <!-- Top Bar -->
       <div class="topbar">
         <h1 class="topbar-title">Dashboard</h1>
-        <div class="topbar-user">
+        <div class="topbar-user" id="user-menu-toggle">
           <div class="user-avatar"><?php echo strtoupper(substr($username, 0, 2)); ?></div>
           <span><?php echo htmlspecialchars($username); ?></span>
+          
+          <!-- Dropdown Menu -->
+          <div class="user-dropdown">
+            <div class="user-dropdown-header">
+              <div class="user-dropdown-name"><?php echo htmlspecialchars($username); ?></div>
+              <div class="user-dropdown-email"><?php echo htmlspecialchars($email); ?></div>
+            </div>
+            <div class="user-dropdown-menu">
+              <button class="user-dropdown-item logout" id="logout-btn">
+                <span class="dropdown-icon">🚪</span>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -314,7 +322,7 @@ else:
         </div>
         <div class="form-group">
           <label class="form-label">Quantity</label>
-          <input type="number" class="form-input" name="quantity" min="1" required>
+          <input type="number" class="form-input" name="quantity" min="0" required>
         </div>
         <div class="form-group">
           <label class="form-label">Status</label>
