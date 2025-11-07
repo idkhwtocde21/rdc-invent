@@ -50,7 +50,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     setTimeout(() => {
       notificationText.textContent = message;
-      icon.textContent = type === 'success' ? '✓' : '✕';
+      icon.className = type === 'success' ? 'fas fa-check-circle notification-icon' : 'fas fa-times-circle notification-icon';
       notification.className = 'notification show ' + type;
       notification.style.display = 'flex';
       
@@ -137,11 +137,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (input.type === 'password') {
         input.type = 'text';
         this.classList.add('active');
-        eyeIcon.textContent = '👁️‍🗨️';
+        eyeIcon.className = 'fas fa-eye-slash eye-icon';
       } else {
         input.type = 'password';
         this.classList.remove('active');
-        eyeIcon.textContent = '👁️';
+        eyeIcon.className = 'fas fa-eye eye-icon';
       }
     });
   });

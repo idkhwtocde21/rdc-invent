@@ -25,6 +25,9 @@ $stmt->close();
   <title>Dashboard - Romero's Dental Clinic</title>
   <link rel="stylesheet" href="dashboard.css">
   <link rel="icon" type="image" href="logos/rom_logo.png">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <!-- Add jsPDF and html2canvas for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -46,19 +49,19 @@ $stmt->close();
       <ul class="sidebar-nav">
         <li class="nav-item">
           <div class="nav-link active" data-section="settings">
-            <span class="nav-icon">⚙️</span>
+            <i class="fas fa-cog nav-icon"></i>
             <span>Settings</span>
           </div>
         </li>
         <li class="nav-item">
           <div class="nav-link" data-section="patients">
-            <span class="nav-icon">👥</span>
+            <i class="fas fa-users nav-icon"></i>
             <span>Patients</span>
           </div>
         </li>
         <li class="nav-item">
           <div class="nav-link" data-section="inventory">
-            <span class="nav-icon">📦</span>
+            <i class="fas fa-box nav-icon"></i>
             <span>Inventory</span>
           </div>
         </li>
@@ -82,7 +85,7 @@ $stmt->close();
             </div>
             <div class="user-dropdown-menu">
               <button class="user-dropdown-item logout" id="logout-btn">
-                <span class="dropdown-icon">🚪</span>
+                <i class="fas fa-sign-out-alt dropdown-icon"></i>
                 <span>Logout</span>
               </button>
             </div>
@@ -153,6 +156,7 @@ $stmt->close();
                     <th>Patient Name</th>
                     <th>Contact</th>
                     <th>Last Visit</th>
+                    <th>Medical Info</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -177,13 +181,18 @@ else:
     data-address="<?php echo htmlspecialchars($row['address']); ?>"
     data-last-visit="<?php echo $row['last_visit'] ? date('Y-m-d\TH:i', strtotime($row['last_visit'])) : ''; ?>"
     data-image="<?php echo htmlspecialchars($row['patient_image'] ?? ''); ?>"
+    data-medical-history="<?php echo htmlspecialchars($row['medical_history'] ?? ''); ?>"
+    data-clinical-findings="<?php echo htmlspecialchars($row['clinical_findings'] ?? ''); ?>"
+    data-diagnostic-tests="<?php echo htmlspecialchars($row['diagnostic_tests'] ?? ''); ?>"
+    data-diagnosis="<?php echo htmlspecialchars($row['diagnosis'] ?? ''); ?>"
+    data-conclusion="<?php echo htmlspecialchars($row['conclusion'] ?? ''); ?>"
   >
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
         <?php if (!empty($row['patient_image'])): ?>
           <img src="<?php echo htmlspecialchars($row['patient_image']); ?>" alt="Patient" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
         <?php else: ?>
-          <span>👤</span>
+          <i class="fas fa-user-circle" style="font-size: 24px; color: #94a3b8;"></i>
         <?php endif; ?>
         <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong>
       </div>
@@ -199,9 +208,9 @@ else:
       ?>
     </td>
     <td>
-      <button class="btn btn-secondary btn-small view-patient">📋 View</button>
-      <button class="btn btn-secondary btn-small edit-patient">✏️ Edit</button>
-      <button class="btn btn-danger btn-small delete-patient">🗑️ Delete</button>
+      <button class="btn btn-secondary btn-small view-patient"><i class="fas fa-eye"></i> View</button>
+      <button class="btn btn-secondary btn-small edit-patient"><i class="fas fa-edit"></i> Edit</button>
+      <button class="btn btn-danger btn-small delete-patient"><i class="fas fa-trash"></i> Delete</button>
     </td>
   </tr>
 
@@ -292,7 +301,7 @@ else:
   <div class="modal" id="logout-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-icon">🚪</div>
+        <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
         <h3 class="modal-title">Confirm Logout</h3>
         <p class="modal-text">Are you sure you want to logout?</p>
       </div>
@@ -409,6 +418,37 @@ else:
           <label class="form-label">Last Visit Date & Time</label>
           <input type="datetime-local" class="form-input" name="last_visit">
         </div>
+        
+        <!-- Medical Information Section -->
+        <div style="border-top: 2px solid #e2e8f0; margin: 24px 0; padding-top: 24px;">
+          <h4 style="font-size: 16px; font-weight: 600; color: #1e293b; margin-bottom: 16px;">📋 Medical Information</h4>
+          
+          <div class="form-group">
+            <label class="form-label">Medical and Dental History</label>
+            <textarea class="form-input" name="medical_history" rows="3" placeholder="Previous medical conditions, medications, allergies..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Clinical Examination Findings</label>
+            <textarea class="form-input" name="clinical_findings" rows="3" placeholder="Examination observations and findings..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Diagnostic Tests</label>
+            <textarea class="form-input" name="diagnostic_tests" rows="2" placeholder="X-rays, lab tests, and other diagnostics..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Diagnosis</label>
+            <textarea class="form-input" name="diagnosis" rows="2" placeholder="Medical diagnosis and condition..."></textarea>
+          </div>
+          
+          <div class="form-group">
+            <label class="form-label">Conclusion</label>
+            <textarea class="form-input" name="conclusion" rows="3" placeholder="Treatment plan, recommendations, and follow-up..."></textarea>
+          </div>
+        </div>
+        
         <div class="modal-actions">
           <button type="button" class="btn btn-secondary" id="cancel-add-patient">Cancel</button>
           <button type="submit" class="btn btn-primary" id="patient-submit-btn">Add Patient</button>
@@ -450,6 +490,37 @@ else:
         <div style="margin-bottom:12px;"><strong>Email:</strong> <span id="view-patient-email"></span></div>
         <div style="margin-bottom:12px;"><strong>Address:</strong> <span id="view-patient-address"></span></div>
         <div style="margin-bottom:12px;"><strong>Last Visit:</strong> <span id="view-patient-last-visit"></span></div>
+        
+        <!-- Medical Information Display -->
+        <div style="border-top: 2px solid #e2e8f0; margin: 16px 0; padding-top: 16px;">
+          <h3 style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 18px;"> Medical Information</h4>
+          
+          <div style="margin-bottom:12px;">
+            <strong>Medical & Dental History:</strong><br>
+            <span id="view-medical-history" style="color:#64748b; white-space: pre-wrap;"></span>
+          </div>
+          
+          <div style="margin-bottom:12px;">
+            <strong>Clinical Examination:</strong><br>
+            <span id="view-clinical-findings" style="color:#64748b; white-space: pre-wrap;"></span>
+          </div>
+          
+          <div style="margin-bottom:12px;">
+            <strong>Diagnostic Tests:</strong><br>
+            <span id="view-diagnostic-tests" style="color:#64748b; white-space: pre-wrap;"></span>
+          </div>
+          
+          <div style="margin-bottom:12px;">
+            <strong>Diagnosis:</strong><br>
+            <span id="view-diagnosis" style="color:#64748b; white-space: pre-wrap;"></span>
+          </div>
+          
+          <div style="margin-bottom:12px;">
+            <strong>Conclusion:</strong><br>
+            <span id="view-conclusion" style="color:#64748b; white-space: pre-wrap;"></span>
+          </div>
+        </div>
+        
         <div style="margin-bottom:0; color:#64748b;"><small id="view-patient-created"></small></div>
       </div>
       <div class="modal-actions">

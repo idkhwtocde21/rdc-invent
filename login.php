@@ -19,6 +19,9 @@ if (isset($_SESSION['user_id'])) {
   <title>Romero's Dental Clinic - Login</title>
   <link rel="stylesheet" href="login.css">
   <link rel="icon" type="image" href="logos/rom_logo.png">
+  
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
   
@@ -50,17 +53,17 @@ if (isset($_SESSION['user_id'])) {
       <p class="hero-description">Professional dental care with compassion and excellence. Join us in creating healthy, beautiful smiles.</p>
       <button class="hero-btn" id="goto-login">
         <span>Get Started</span>
-        <span class="arrow">→</span>
+        <i class="fas fa-arrow-right arrow"></i>
       </button>
     </div>
     <div class="hero-features">
       <div class="feature-card">
-        <span class="feature-icon">🦷</span>
+        <i class="fas fa-tooth feature-icon"></i>
         <h3>Expert Care</h3>
         <p>Experienced professionals</p>
       </div>
       <div class="feature-card">
-        <span class="feature-icon">❤️</span>
+        <i class="fas fa-heart feature-icon"></i>
         <h3>Patient First</h3>
         <p>Compassionate service</p>
       </div>
@@ -106,7 +109,7 @@ if (isset($_SESSION['user_id'])) {
               required
             >
             <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-              <span class="eye-icon">👁️</span>
+              <i class="fas fa-eye eye-icon"></i>
             </button>
           </div>
         </div>
@@ -170,7 +173,7 @@ if (isset($_SESSION['user_id'])) {
               required
             >
             <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-              <span class="eye-icon">👁️</span>
+              <i class="fas fa-eye eye-icon"></i>
             </button>
           </div>
         </div>
@@ -188,7 +191,7 @@ if (isset($_SESSION['user_id'])) {
               required
             >
             <button type="button" class="password-toggle" aria-label="Toggle password visibility">
-              <span class="eye-icon">👁️</span>
+              <i class="fas fa-eye eye-icon"></i>
             </button>
           </div>
         </div>
@@ -207,12 +210,12 @@ if (isset($_SESSION['user_id'])) {
 
   <!-- Back to Hero Button -->
   <button class="back-to-hero hidden" id="back-to-hero">
-    <span>←</span>
+    <i class="fas fa-arrow-left"></i>
   </button>
 
   <!-- Notification -->
   <div class="notification" id="notification">
-    <span class="notification-icon">✓</span>
+    <i class="fas fa-check-circle notification-icon"></i>
     <span class="notification-text" id="notification-text">Success!</span>
   </div>
 

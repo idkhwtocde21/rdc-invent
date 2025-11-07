@@ -612,6 +612,13 @@ function attachPatientRowEvents() {
       const lastVisit = row.children[2] ? row.children[2].innerText.trim() : '';
       const image = row.dataset.image || '';
       const created = row.dataset.created || '';
+      
+      // Medical information
+      const medicalHistory = row.dataset.medicalHistory || '—';
+      const clinicalFindings = row.dataset.clinicalFindings || '—';
+      const diagnosticTests = row.dataset.diagnosticTests || '—';
+      const diagnosis = row.dataset.diagnosis || '—';
+      const conclusion = row.dataset.conclusion || '—';
 
       const viewModal = document.getElementById('view-patient-modal');
       if (!viewModal) return;
@@ -634,6 +641,13 @@ function attachPatientRowEvents() {
       document.getElementById('view-patient-address').textContent = address || '—';
       document.getElementById('view-patient-last-visit').textContent = lastVisit || 'No visit yet';
       document.getElementById('view-patient-created').textContent = created ? `Added: ${created}` : '';
+      
+      // Populate medical information
+      document.getElementById('view-medical-history').textContent = medicalHistory;
+      document.getElementById('view-clinical-findings').textContent = clinicalFindings;
+      document.getElementById('view-diagnostic-tests').textContent = diagnosticTests;
+      document.getElementById('view-diagnosis').textContent = diagnosis;
+      document.getElementById('view-conclusion').textContent = conclusion;
 
       viewModal.classList.add('show');
       hideNotification();
@@ -650,12 +664,26 @@ function attachPatientRowEvents() {
       const email = row.dataset.email || '';
       const address = row.dataset.address || '';
       const lastVisit = row.dataset.lastVisit || '';
+      
+      // Medical information fields
+      const medicalHistory = row.dataset.medicalHistory || '';
+      const clinicalFindings = row.dataset.clinicalFindings || '';
+      const diagnosticTests = row.dataset.diagnosticTests || '';
+      const diagnosis = row.dataset.diagnosis || '';
+      const conclusion = row.dataset.conclusion || '';
 
       addPatientForm.reset();
       addPatientForm.patient_name.value = patient_name;
       addPatientForm.contact.value = contact;
       addPatientForm.email.value = email;
       addPatientForm.address.value = address;
+      
+      // Populate medical information fields
+      if (addPatientForm.medical_history) addPatientForm.medical_history.value = medicalHistory;
+      if (addPatientForm.clinical_findings) addPatientForm.clinical_findings.value = clinicalFindings;
+      if (addPatientForm.diagnostic_tests) addPatientForm.diagnostic_tests.value = diagnosticTests;
+      if (addPatientForm.diagnosis) addPatientForm.diagnosis.value = diagnosis;
+      if (addPatientForm.conclusion) addPatientForm.conclusion.value = conclusion;
       
       // Hide image preview when editing
       const imagePreview = document.getElementById('image-preview');
@@ -707,6 +735,13 @@ if (exportPdfBtn) {
     const created = document.getElementById('view-patient-created').textContent;
     const patientImg = document.getElementById('view-patient-image');
     
+    // Medical information
+    const medicalHistory = document.getElementById('view-medical-history').textContent || '—';
+    const clinicalFindings = document.getElementById('view-clinical-findings').textContent || '—';
+    const diagnosticTests = document.getElementById('view-diagnostic-tests').textContent || '—';
+    const diagnosis = document.getElementById('view-diagnosis').textContent || '—';
+    const conclusion = document.getElementById('view-conclusion').textContent || '—';
+    
     // Function to generate PDF with or without image
     const generatePDF = (imgData = null) => {
       // Header
@@ -747,54 +782,148 @@ if (exportPdfBtn) {
         y += 10;
       }
       
-      // Patient details
+      // Patient details section
+      doc.setFontSize(14);
+      doc.setTextColor(30, 41, 59);
+      doc.setFont(undefined, 'bold');
+      doc.text('Patient Information', 20, y);
+      y += 8;
+      
       doc.setFontSize(12);
       doc.setTextColor(0, 0, 0);
       
-      doc.setFont(undefined, 'bold');
-      doc.text('Name:', 20, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(name, 60, y);
+      const labelX = 20;
+      const valueX = 45;
       
-      y += 10;
       doc.setFont(undefined, 'bold');
-      doc.text('Contact:', 20, y);
+      doc.text('Name:', labelX, y);
       doc.setFont(undefined, 'normal');
-      doc.text(contact, 60, y);
+      doc.text(name, valueX, y);
       
-      y += 10;
+      y += 8;
       doc.setFont(undefined, 'bold');
-      doc.text('Email:', 20, y);
+      doc.text('Contact:', labelX, y);
       doc.setFont(undefined, 'normal');
-      doc.text(email, 60, y);
+      doc.text(contact, valueX, y);
       
-      y += 10;
+      y += 8;
       doc.setFont(undefined, 'bold');
-      doc.text('Address:', 20, y);
+      doc.text('Email:', labelX, y);
       doc.setFont(undefined, 'normal');
-      const splitAddress = doc.splitTextToSize(address, 130);
-      doc.text(splitAddress, 60, y);
+      doc.text(email, valueX, y);
       
-      y += (splitAddress.length * 7) + 3;
+      y += 8;
       doc.setFont(undefined, 'bold');
-      doc.text('Last Visit:', 20, y);
+      doc.text('Address:', labelX, y);
       doc.setFont(undefined, 'normal');
-      doc.text(lastVisit, 60, y);
+      const splitAddress = doc.splitTextToSize(address, 145);
+      doc.text(splitAddress, valueX, y);
       
-      y += 15;
+      y += (splitAddress.length * 6) + 2;
+      doc.setFont(undefined, 'bold');
+      doc.text('Last Visit:', labelX, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(lastVisit, valueX, y);
+      
+      // Medical Information Section
+      y += 12;
+      doc.setFontSize(14);
+      doc.setTextColor(30, 41, 59);
+      doc.setFont(undefined, 'bold');
+      doc.text('Medical Information', 20, y);
+      y += 8;
+      
+      doc.setFontSize(12);
+      doc.setTextColor(0, 0, 0);
+      
+      // Medical History
+      doc.setFont(undefined, 'bold');
+      doc.text('Medical & Dental History:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const splitMedicalHistory = doc.splitTextToSize(medicalHistory, 170);
+      doc.text(splitMedicalHistory, 20, y);
+      y += (splitMedicalHistory.length * 6) + 6;
+      
+      // Check if we need a new page
+      if (y > 245) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Clinical Findings
+      doc.setFont(undefined, 'bold');
+      doc.text('Clinical Examination Findings:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const splitClinicalFindings = doc.splitTextToSize(clinicalFindings, 170);
+      doc.text(splitClinicalFindings, 20, y);
+      y += (splitClinicalFindings.length * 6) + 6;
+      
+      // Check if we need a new page
+      if (y > 245) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Diagnostic Tests
+      doc.setFont(undefined, 'bold');
+      doc.text('Diagnostic Tests:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const splitDiagnosticTests = doc.splitTextToSize(diagnosticTests, 170);
+      doc.text(splitDiagnosticTests, 20, y);
+      y += (splitDiagnosticTests.length * 6) + 6;
+      
+      // Check if we need a new page
+      if (y > 245) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Diagnosis
+      doc.setFont(undefined, 'bold');
+      doc.text('Diagnosis:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const splitDiagnosis = doc.splitTextToSize(diagnosis, 170);
+      doc.text(splitDiagnosis, 20, y);
+      y += (splitDiagnosis.length * 6) + 6;
+      
+      // Check if we need a new page
+      if (y > 245) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      // Conclusion
+      doc.setFont(undefined, 'bold');
+      doc.text('Conclusion:', 20, y);
+      y += 6;
+      doc.setFont(undefined, 'normal');
+      const splitConclusion = doc.splitTextToSize(conclusion, 170);
+      doc.text(splitConclusion, 20, y);
+      y += (splitConclusion.length * 6) + 8;
+      
+      // Created date
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(created, 20, y);
       
-      // Footer
-      doc.setLineWidth(0.3);
-      doc.setDrawColor(200, 200, 200);
-      doc.line(20, 275, 190, 275);
-      
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text('Generated on: ' + new Date().toLocaleString(), 105, 280, { align: 'center' });
-      doc.text("Romero's Dental Clinic - Patient Management System", 105, 285, { align: 'center' });
+      // Footer on last page
+      const pageCount = doc.internal.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(200, 200, 200);
+        doc.line(20, 275, 190, 275);
+        
+        doc.setFontSize(8);
+        doc.setTextColor(150, 150, 150);
+        doc.text('Generated on: ' + new Date().toLocaleString(), 105, 280, { align: 'center' });
+        doc.text("Romero's Dental Clinic - Patient Management System", 105, 285, { align: 'center' });
+        doc.text(`Page ${i} of ${pageCount}`, 190, 290, { align: 'right' });
+      }
       
       // Save PDF
       const fileName = `patient_${name.replace(/\s+/g, '_')}_record.pdf`;

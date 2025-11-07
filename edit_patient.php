@@ -17,6 +17,13 @@ $address = trim($_POST['address'] ?? '');
 $last_visit = trim($_POST['last_visit'] ?? '');
 $patient_image = '';
 
+// Medical information fields
+$medical_history = trim($_POST['medical_history'] ?? '');
+$clinical_findings = trim($_POST['clinical_findings'] ?? '');
+$diagnostic_tests = trim($_POST['diagnostic_tests'] ?? '');
+$diagnosis = trim($_POST['diagnosis'] ?? '');
+$conclusion = trim($_POST['conclusion'] ?? '');
+
 // Handle image upload
 if (isset($_FILES['patient_image']) && $_FILES['patient_image']['error'] === UPLOAD_ERR_OK) {
     $upload_dir = 'uploads/patients/';
@@ -78,17 +85,17 @@ if ($id && $patient_name && $contact) {
     
     // Build query based on what fields are being updated
     if ($patient_image && $last_visit) {
-        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, last_visit=?, patient_image=? WHERE id=?");
-        $stmt->bind_param("ssssssi", $patient_name, $contact, $email, $address, $last_visit, $patient_image, $id);
+        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, last_visit=?, patient_image=?, medical_history=?, clinical_findings=?, diagnostic_tests=?, diagnosis=?, conclusion=? WHERE id=?");
+        $stmt->bind_param("sssssssssssi", $patient_name, $contact, $email, $address, $last_visit, $patient_image, $medical_history, $clinical_findings, $diagnostic_tests, $diagnosis, $conclusion, $id);
     } elseif ($patient_image) {
-        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, patient_image=? WHERE id=?");
-        $stmt->bind_param("sssssi", $patient_name, $contact, $email, $address, $patient_image, $id);
+        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, patient_image=?, medical_history=?, clinical_findings=?, diagnostic_tests=?, diagnosis=?, conclusion=? WHERE id=?");
+        $stmt->bind_param("ssssssssssi", $patient_name, $contact, $email, $address, $patient_image, $medical_history, $clinical_findings, $diagnostic_tests, $diagnosis, $conclusion, $id);
     } elseif ($last_visit) {
-        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, last_visit=? WHERE id=?");
-        $stmt->bind_param("sssssi", $patient_name, $contact, $email, $address, $last_visit, $id);
+        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, last_visit=?, medical_history=?, clinical_findings=?, diagnostic_tests=?, diagnosis=?, conclusion=? WHERE id=?");
+        $stmt->bind_param("ssssssssssi", $patient_name, $contact, $email, $address, $last_visit, $medical_history, $clinical_findings, $diagnostic_tests, $diagnosis, $conclusion, $id);
     } else {
-        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=? WHERE id=?");
-        $stmt->bind_param("ssssi", $patient_name, $contact, $email, $address, $id);
+        $stmt = $conn->prepare("UPDATE patients SET patient_name=?, contact=?, email=?, address=?, medical_history=?, clinical_findings=?, diagnostic_tests=?, diagnosis=?, conclusion=? WHERE id=?");
+        $stmt->bind_param("sssssssssi", $patient_name, $contact, $email, $address, $medical_history, $clinical_findings, $diagnostic_tests, $diagnosis, $conclusion, $id);
     }
     
     if ($stmt->execute()) {

@@ -23,13 +23,18 @@ else:
     data-address="<?php echo htmlspecialchars($row['address']); ?>"
     data-last-visit="<?php echo $row['last_visit'] ? date('Y-m-d\TH:i', strtotime($row['last_visit'])) : ''; ?>"
     data-image="<?php echo htmlspecialchars($row['patient_image'] ?? ''); ?>"
+    data-medical-history="<?php echo htmlspecialchars($row['medical_history'] ?? ''); ?>"
+    data-clinical-findings="<?php echo htmlspecialchars($row['clinical_findings'] ?? ''); ?>"
+    data-diagnostic-tests="<?php echo htmlspecialchars($row['diagnostic_tests'] ?? ''); ?>"
+    data-diagnosis="<?php echo htmlspecialchars($row['diagnosis'] ?? ''); ?>"
+    data-conclusion="<?php echo htmlspecialchars($row['conclusion'] ?? ''); ?>"
   >
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
         <?php if (!empty($row['patient_image'])): ?>
           <img src="<?php echo htmlspecialchars($row['patient_image']); ?>" alt="Patient" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover;">
         <?php else: ?>
-          <span>👤</span>
+          <i class="fas fa-user-circle" style="font-size: 24px; color: #94a3b8;"></i>
         <?php endif; ?>
         <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong>
       </div>
@@ -45,9 +50,9 @@ else:
       ?>
     </td>
     <td>
-      <button class="btn btn-secondary btn-small view-patient">📋 View</button>
-      <button class="btn btn-secondary btn-small edit-patient">✏️ Edit</button>
-      <button class="btn btn-danger btn-small delete-patient">🗑️ Delete</button>
+      <button class="btn btn-secondary btn-small view-patient"><i class="fas fa-eye"></i> View</button>
+      <button class="btn btn-secondary btn-small edit-patient"><i class="fas fa-edit"></i> Edit</button>
+      <button class="btn btn-danger btn-small delete-patient"><i class="fas fa-trash"></i> Delete</button>
     </td>
   </tr>
 <?php endwhile; endif; ?>

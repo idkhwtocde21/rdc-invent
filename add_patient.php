@@ -16,6 +16,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = trim($_POST['address'] ?? '');
     $last_visit = date('Y-m-d H:i:s');
     $patient_image = '';
+    
+    // Medical information fields
+    $medical_history = trim($_POST['medical_history'] ?? '');
+    $clinical_findings = trim($_POST['clinical_findings'] ?? '');
+    $diagnostic_tests = trim($_POST['diagnostic_tests'] ?? '');
+    $diagnosis = trim($_POST['diagnosis'] ?? '');
+    $conclusion = trim($_POST['conclusion'] ?? '');
 
     // Handle image upload
     if (isset($_FILES['patient_image']) && $_FILES['patient_image']['error'] === UPLOAD_ERR_OK) {
@@ -68,8 +75,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $stmt = $conn->prepare("INSERT INTO patients (patient_name, contact, email, address, last_visit, patient_image) VALUES (?, ?, ?, ?, ?, ?)");
-    $stmt->bind_param("ssssss", $patient_name, $contact, $email, $address, $last_visit, $patient_image);
+    $stmt = $conn->prepare("INSERT INTO patients (patient_name, contact, email, address, last_visit, patient_image, medical_history, clinical_findings, diagnostic_tests, diagnosis, conclusion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("sssssssssss", $patient_name, $contact, $email, $address, $last_visit, $patient_image, $medical_history, $clinical_findings, $diagnostic_tests, $diagnosis, $conclusion);
 
     if ($stmt->execute()) {
         $new_id = $conn->insert_id;
@@ -85,6 +92,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 "address" => $address,
                 "last_visit" => $last_visit,
                 "patient_image" => $patient_image,
+                "medical_history" => $medical_history,
+                "clinical_findings" => $clinical_findings,
+                "diagnostic_tests" => $diagnostic_tests,
+                "diagnosis" => $diagnosis,
+                "conclusion" => $conclusion,
                 "created_at" => date('Y-m-d H:i:s')
             ]
         ]);
