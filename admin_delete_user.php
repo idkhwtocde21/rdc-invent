@@ -28,7 +28,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => " User deleted successfully!"]);
+        usleep(500000); // 0.5 second delay
+        echo json_encode(["status" => "success", "message" => "User deleted successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to delete user."]);
     }

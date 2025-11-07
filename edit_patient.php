@@ -99,6 +99,9 @@ if ($id && $patient_name && $contact) {
     }
     
     if ($stmt->execute()) {
+        // Add small delay for better UX with loading screen
+        usleep(500000); // 0.5 seconds
+        
         echo json_encode(["status" => "success", "message" => "Patient updated successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Update failed."]);

@@ -98,7 +98,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => " User updated successfully!"]);
+        usleep(500000); // 0.5 second delay
+        echo json_encode(["status" => "success", "message" => "User updated successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to update user."]);
     }

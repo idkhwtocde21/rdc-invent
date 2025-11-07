@@ -5,7 +5,8 @@ if ($id) {
     $stmt = $conn->prepare("DELETE FROM inventory WHERE id=?");
     $stmt->bind_param("i", $id);
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Item deleted."]);
+        usleep(500000); // 0.5 second delay
+        echo json_encode(["status" => "success", "message" => "Inventory item deleted successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Delete failed."]);
     }

@@ -15,6 +15,7 @@ if ($id) {
     $stmt->bind_param("i", $id);
     
     if ($stmt->execute()) {
+        usleep(500000); // 0.5 second delay
         echo json_encode(["status" => "success", "message" => "Patient deleted successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Delete failed."]);

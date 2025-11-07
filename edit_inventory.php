@@ -51,7 +51,10 @@ if ($id && $item_name && $category && $quantity !== null && $quantity >= 0 && $s
     $stmt = $conn->prepare("UPDATE inventory SET item_name=?, category=?, quantity=?, status=? WHERE id=?");
     $stmt->bind_param("ssisi", $item_name, $category, $quantity, $status, $id);
     if ($stmt->execute()) {
-        echo json_encode(["status" => "success", "message" => "Inventory updated."]);
+        // Add small delay for better UX with loading screen
+        usleep(500000); // 0.5 seconds
+        
+        echo json_encode(["status" => "success", "message" => "Inventory updated successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Update failed."]);
     }

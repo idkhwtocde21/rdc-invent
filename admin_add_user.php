@@ -83,8 +83,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->bind_param("sssi", $username, $email, $hashed_password, $role);
 
     if ($stmt->execute()) {
+        // Add small delay for better UX with loading screen
+        usleep(500000); // 0.5 seconds
+        
         $roleText = $role == 2 ? 'Admin' : 'Staff';
-        echo json_encode(["status" => "success", "message" => " $roleText added successfully!"]);
+        echo json_encode(["status" => "success", "message" => "$roleText added successfully!"]);
     } else {
         echo json_encode(["status" => "error", "message" => "Failed to add user."]);
     }

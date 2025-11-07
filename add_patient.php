@@ -81,6 +81,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($stmt->execute()) {
         $new_id = $conn->insert_id;
         
+        // Add small delay for better UX with loading screen
+        usleep(500000); // 0.5 seconds
+        
         echo json_encode([
             "status" => "success", 
             "message" => "Patient added successfully!",
