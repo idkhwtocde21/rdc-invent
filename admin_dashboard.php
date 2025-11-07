@@ -30,10 +30,23 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard - Romero's Dental Clinic</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="admin_dashboard.css">
   <link rel="icon" type="image" href="logos/rom_logo.png">
+  
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 </head>
 <body>
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Logging out...</p>
+    </div>
+  </div>
+
   <div class="admin-dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -49,31 +62,31 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         <ul>
           <li class="nav-item">
             <a href="#" class="nav-link active" data-section="overview">
-              <span class="nav-icon">📊</span>
+              <span class="nav-icon"><i class="fas fa-chart-line"></i></span>
               <span>Overview</span>
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-section="users">
-              <span class="nav-icon">👥</span>
+              <span class="nav-icon"><i class="fas fa-users"></i></span>
               <span>Users Management</span>
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-section="patients">
-              <span class="nav-icon">🏥</span>
+              <span class="nav-icon"><i class="fas fa-user-injured"></i></span>
               <span>All Patients</span>
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-section="inventory">
-              <span class="nav-icon">📦</span>
+              <span class="nav-icon"><i class="fas fa-box"></i></span>
               <span>Inventory</span>
             </a>
           </li>
           <li class="nav-item">
             <a href="#" class="nav-link" data-section="settings">
-              <span class="nav-icon">⚙️</span>
+              <span class="nav-icon"><i class="fas fa-cog"></i></span>
               <span>Settings</span>
             </a>
           </li>
@@ -92,7 +105,6 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         <div class="topbar-user" id="user-menu-toggle">
           <div class="user-avatar"><?php echo strtoupper(substr($username, 0, 2)); ?></div>
           <span><?php echo htmlspecialchars($username); ?></span>
-          <span class="admin-badge">Admin</span>
           
           <!-- Dropdown Menu -->
           <div class="user-dropdown">
@@ -102,7 +114,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             </div>
             <div class="user-dropdown-menu">
               <button class="user-dropdown-item logout" id="logout-btn">
-                <span class="dropdown-icon">🚪</span>
+                <i class="fas fa-sign-out-alt dropdown-icon"></i>
                 <span>Logout</span>
               </button>
             </div>
@@ -121,7 +133,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
 
           <div class="stats-grid">
             <div class="stat-card">
-              <div class="stat-icon">👨‍💼</div>
+              <div class="stat-icon"><i class="fas fa-user-tie"></i></div>
               <div class="stat-info">
                 <h3 class="stat-number"><?php echo $total_staff; ?></h3>
                 <p class="stat-label">Staff Members</p>
@@ -129,7 +141,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             </div>
 
             <div class="stat-card">
-              <div class="stat-icon">👑</div>
+              <div class="stat-icon"><i class="fas fa-user-shield"></i></div>
               <div class="stat-info">
                 <h3 class="stat-number"><?php echo $total_admins; ?></h3>
                 <p class="stat-label">Administrators</p>
@@ -137,7 +149,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             </div>
 
             <div class="stat-card">
-              <div class="stat-icon">🏥</div>
+              <div class="stat-icon"><i class="fas fa-procedures"></i></div>
               <div class="stat-info">
                 <h3 class="stat-number"><?php echo $total_patients; ?></h3>
                 <p class="stat-label">Total Patients</p>
@@ -145,7 +157,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             </div>
 
             <div class="stat-card alert">
-              <div class="stat-icon">⚠️</div>
+              <div class="stat-icon"><i class="fas fa-exclamation-triangle"></i></div>
               <div class="stat-info">
                 <h3 class="stat-number"><?php echo $low_stock; ?></h3>
                 <p class="stat-label">Low Stock Items</p>
@@ -162,7 +174,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
               while ($row = $recent_patients->fetch_assoc()): 
               ?>
               <div class="activity-item">
-                <span class="activity-icon">➕</span>
+                <span class="activity-icon"><i class="fas fa-plus-circle"></i></span>
                 <span class="activity-text">New patient: <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong></span>
                 <span class="activity-time"><?php echo date('M d, Y', strtotime($row['created_at'])); ?></span>
               </div>
@@ -190,11 +202,11 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
               <span class="tab-count"><?php echo $total_staff + $total_admins; ?></span>
             </button>
             <button class="filter-tab" data-filter="staff">
-              <span>👨‍💼 Staff</span>
+              <span><i class="fas fa-user-tie"></i> Staff</span>
               <span class="tab-count"><?php echo $total_staff; ?></span>
             </button>
             <button class="filter-tab" data-filter="admin">
-              <span>👑 Admins</span>
+              <span><i class="fas fa-user-shield"></i> Admins</span>
               <span class="tab-count"><?php echo $total_admins; ?></span>
             </button>
           </div>
@@ -232,14 +244,14 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                     <td>
                       <?php if ($row['id'] == $user_id): ?>
                         <!-- Current logged-in admin -->
-                        <button class="btn-icon view-admin-info" title="View">👁️</button>
+                        <button class="btn-icon view-admin-info" title="View"><i class="fas fa-eye"></i></button>
                       <?php elseif ($row['role'] == 2): ?>
                         <!-- Other admin -->
-                        <button class="btn-icon view-other-admin" title="View">👁️</button>
+                        <button class="btn-icon view-other-admin" title="View"><i class="fas fa-eye"></i></button>
                       <?php else: ?>
                         <!-- Staff members -->
-                        <button class="btn-icon edit-user" title="Edit">✏️</button>
-                        <button class="btn-icon delete-user" title="Delete">🗑️</button>
+                        <button class="btn-icon edit-user" title="Edit"><i class="fas fa-edit"></i></button>
+                        <button class="btn-icon delete-user" title="Delete"><i class="fas fa-trash"></i></button>
                       <?php endif; ?>
                     </td>
                   </tr>
@@ -355,7 +367,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                 <div style="position: relative;">
                   <input type="password" class="form-input" placeholder="Enter new password" name="password" id="admin-password">
                   <button type="button" class="password-toggle" id="toggle-admin-password" aria-label="Toggle password visibility">
-                    <span class="eye-icon">👁️</span>
+                    <i class="fas fa-eye eye-icon"></i>
                   </button>
                 </div>
               </div>
@@ -407,11 +419,14 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   <!-- Logout Modal -->
   <div class="modal" id="logout-modal">
     <div class="modal-content">
-      <h2 class="modal-title">Confirm Logout</h2>
-      <p>Are you sure you want to logout?</p>
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-sign-out-alt"></i></div>
+        <h3 class="modal-title">Confirm Logout</h3>
+        <p class="modal-text">Are you sure you want to logout?</p>
+      </div>
       <div class="modal-actions">
-        <button class="btn-secondary" id="cancel-logout">Cancel</button>
-        <button class="btn-primary" id="confirm-logout">Logout</button>
+        <button class="btn btn-secondary" id="cancel-logout">Cancel</button>
+        <button class="btn btn-danger" id="confirm-logout">Logout</button>
       </div>
     </div>
   </div>
@@ -460,9 +475,9 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   <!-- Restricted Admin View Modal -->
   <div class="modal" id="restricted-admin-modal">
     <div class="modal-content">
-      <h2 class="modal-title">⚠️ Access Restricted</h2>
+      <h2 class="modal-title"><i class="fas fa-exclamation-triangle" style="color: #f59e0b;"></i> Access Restricted</h2>
       <div style="margin: 30px 0; text-align: center;">
-        <div style="font-size: 60px; margin-bottom: 20px;">🔒</div>
+        <div style="font-size: 60px; margin-bottom: 20px;"><i class="fas fa-lock" style="color: #94a3b8;"></i></div>
         <p style="font-size: 16px; color: #64748b; margin-bottom: 10px;">
           You cannot view other administrators' information.
         </p>

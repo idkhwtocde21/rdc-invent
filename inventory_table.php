@@ -30,8 +30,8 @@ else:
       <span style="color: <?php echo $color; ?>; font-weight: 600;"><?php echo $icon . ' ' . htmlspecialchars($status); ?></span>
     </td>
     <td>
-      <button class="btn btn-secondary btn-small edit-inventory">✏️ Edit</button>
-      <button class="btn btn-danger btn-small delete-inventory">🗑️ Delete</button>
+      <button class="btn btn-secondary btn-small edit-inventory"><i class="fas fa-edit"></i> Edit</button>
+      <button class="btn btn-danger btn-small delete-inventory"><i class="fas fa-trash"></i> Delete</button>
     </td>
   </tr>
 <?php endwhile; endif; ?>

@@ -57,10 +57,15 @@ cancelLogout.addEventListener('click', () => {
 
 confirmLogout.addEventListener('click', () => {
   logoutModal.classList.remove('show');
-  showNotification('Logging out...', 'success');
+  
+  // Show loading screen
+  const loadingScreen = document.getElementById('loading-screen');
+  loadingScreen.classList.add('active');
+  
+  // Redirect after delay
   setTimeout(() => {
     window.location.href = 'logout.php';
-  }, 2500);
+  }, 1500);
 });
 
 // OPTION LANG TO! (DONT REMOVE IT AS A COMMENT!)
@@ -73,55 +78,40 @@ confirmLogout.addEventListener('click', () => {
 // });
 //
 
-// Notification System (improved with animations)
-let notificationTimeout = null;
+// SweetAlert2 Notification System
 function showNotification(message, type = 'success') {
-  const notification = document.getElementById('notification');
-  const notificationText = document.getElementById('notification-text');
-  const notificationIcon = document.getElementById('notification-icon');
-  
-  // clear previous timeout
-  if (notificationTimeout) {
-    clearTimeout(notificationTimeout);
-  }
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
 
-  // ensure visible immediately
-  notificationText.textContent = message;
-  notificationIcon.textContent = type === 'success' ? '✓' : '✕';
-  notification.className = 'notification show ' + type;
-  notification.style.display = 'flex';
-
-  // hide after 3000ms with animation
-  notificationTimeout = setTimeout(() => {
-    hideNotification();
-  }, 3000);
+  Toast.fire({
+    icon: type === 'success' ? 'success' : 'error',
+    title: message
+  });
 }
 
 function hideNotification() {
-  const notification = document.getElementById('notification');
-  if (!notification) return;
-  
-  // clear timeout
-  if (notificationTimeout) {
-    clearTimeout(notificationTimeout);
-    notificationTimeout = null;
-  }
-  
-  // Add hide animation
-  notification.classList.remove('show');
-  notification.classList.add('hide');
-  
-  // After animation completes, fully hide
-  setTimeout(() => {
-    notification.style.display = 'none';
-    notification.classList.remove('hide', 'success', 'error');
-    
-    // reset icon/text
-    const notificationText = document.getElementById('notification-text');
-    const notificationIcon = document.getElementById('notification-icon');
-    if (notificationText) notificationText.textContent = '';
-    if (notificationIcon) notificationIcon.textContent = '';
-  }, 400);
+  Swal.close();
+}
+
+// Show loading with SweetAlert2
+function showLoading(message = 'Processing...') {
+  Swal.fire({
+    title: message,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 }
 
 // Save Settings Modal Logic
@@ -187,21 +177,25 @@ document.getElementById('settings-form').addEventListener('submit', (e) => {
 });
 
 // Password visibility toggle for settings
+// Password visibility toggle for settings
 const toggleSettingsPassword = document.getElementById('toggle-settings-password');
 const settingsPasswordInput = document.getElementById('settings-password');
 
 if (toggleSettingsPassword && settingsPasswordInput) {
   toggleSettingsPassword.addEventListener('click', function() {
     const type = settingsPasswordInput.getAttribute('type');
+    const eyeIcon = toggleSettingsPassword.querySelector('.eye-icon');
     
     if (type === 'password') {
       settingsPasswordInput.setAttribute('type', 'text');
       toggleSettingsPassword.classList.add('active');
-      toggleSettingsPassword.querySelector('.eye-icon').textContent = '👁️‍🗨️';
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
     } else {
       settingsPasswordInput.setAttribute('type', 'password');
       toggleSettingsPassword.classList.remove('active');
-      toggleSettingsPassword.querySelector('.eye-icon').textContent = '👁️';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
     }
   });
 }
@@ -211,12 +205,17 @@ confirmSaveSettings.addEventListener('click', () => {
   if (pendingSettingsData) {
     const { formData, username } = pendingSettingsData;
     
+    // Close modal and show loading
+    saveSettingsModal.classList.remove('show');
+    showLoading('Updating settings...');
+    
     fetch('update_settings.php', { 
       method: 'POST',
       body: formData
     })
     .then(res => res.json())
     .then((data) => {
+      Swal.close(); // Close loading
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       
       if (data.status === 'success') {
@@ -236,12 +235,11 @@ confirmSaveSettings.addEventListener('click', () => {
         }
       }
       
-      saveSettingsModal.classList.remove('show');
       pendingSettingsData = null;
     })
     .catch(() => {
+      Swal.close(); // Close loading
       showNotification('Server error. Please try again.', 'error');
-      saveSettingsModal.classList.remove('show');
       pendingSettingsData = null;
     });
   }
@@ -278,6 +276,13 @@ const inventorySubmitBtn = document.getElementById('inventory-submit-btn');
 addItemBtn.addEventListener('click', () => {
   addInventoryForm.reset();
   delete addInventoryForm.dataset.editId;
+  
+  // Reset modal title and text for adding
+  const inventoryModalTitle = document.querySelector('#add-inventory-modal .modal-title');
+  const inventoryModalText = document.querySelector('#add-inventory-modal .modal-text');
+  if (inventoryModalTitle) inventoryModalTitle.textContent = 'Add Inventory Item';
+  if (inventoryModalText) inventoryModalText.textContent = 'Fill out the details below to add a new item.';
+  
   addInventoryModal.classList.add('show');
   inventorySubmitBtn.textContent = 'Add Item';
   hideNotification();
@@ -327,17 +332,25 @@ cancelDeleteInventory.addEventListener('click', () => {
 // Confirm delete
 confirmDeleteInventory.addEventListener('click', () => {
   if (deleteItemId) {
+    deleteInventoryModal.classList.remove('show');
+    showLoading('Deleting item...');
+    
     fetch('delete_inventory.php', {
       method: 'POST',
       body: new URLSearchParams({id: deleteItemId})
     })
     .then(res => res.json())
     .then(data => {
+      Swal.close();
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       if (data.status === 'success') {
         refreshInventoryTable();
       }
-      deleteInventoryModal.classList.remove('show');
+      deleteItemId = null;
+    })
+    .catch(() => {
+      Swal.close();
+      showNotification('Server error. Please try again.', 'error');
       deleteItemId = null;
     });
   }
@@ -360,6 +373,13 @@ function attachInventoryRowEvents() {
       addInventoryForm.quantity.value = quantity;
       addInventoryForm.status.value = status;
       addInventoryForm.dataset.editId = id;
+      
+      // Update modal title and text for editing
+      const inventoryModalTitle = document.querySelector('#add-inventory-modal .modal-title');
+      const inventoryModalText = document.querySelector('#add-inventory-modal .modal-text');
+      if (inventoryModalTitle) inventoryModalTitle.textContent = 'Edit Inventory Item';
+      if (inventoryModalText) inventoryModalText.textContent = 'Update the details below for this item.';
+      
       addInventoryModal.classList.add('show');
       inventorySubmitBtn.textContent = 'Finish Editing';
       hideNotification();
@@ -443,25 +463,33 @@ addInventoryForm.addEventListener('submit', function(e) {
   const form = e.target;
   const formData = new FormData(form);
   let url = 'add_inventory.php';
-  if (form.dataset.editId) {
+  const isEditing = !!form.dataset.editId;
+  
+  if (isEditing) {
     formData.append('id', form.dataset.editId);
     url = 'edit_inventory.php';
   }
+  
+  // Close modal and show loading
+  addInventoryModal.classList.remove('show');
+  showLoading(isEditing ? 'Updating item...' : 'Adding item...');
+  
   fetch(url, {
     method: 'POST',
     body: formData
   })
   .then(res => res.json())
   .then(data => {
+    Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       form.reset();
-      addInventoryModal.classList.remove('show');
       delete form.dataset.editId;
       refreshInventoryTable();
     }
   })
   .catch(() => {
+    Swal.close();
     showNotification('Server error. Please try again.', 'error');
   });
 });
@@ -496,6 +524,12 @@ addPatientBtn.addEventListener('click', () => {
   if (imagePreview) {
     imagePreview.style.display = 'none';
   }
+  
+  // Reset modal title and text for adding
+  const patientModalTitle = document.querySelector('#add-patient-modal .modal-title');
+  const patientModalText = document.querySelector('#add-patient-modal .modal-text');
+  if (patientModalTitle) patientModalTitle.textContent = 'Add Patient';
+  if (patientModalText) patientModalText.textContent = 'Fill out the patient details below.';
   
   addPatientModal.classList.add('show');
   patientSubmitBtn.textContent = 'Add Patient';
@@ -547,17 +581,25 @@ cancelDeletePatient.addEventListener('click', () => {
 // Confirm delete patient
 confirmDeletePatient.addEventListener('click', () => {
   if (deletePatientId) {
+    deletePatientModal.classList.remove('show');
+    showLoading('Deleting patient...');
+    
     fetch('delete_patient.php', {
       method: 'POST',
       body: new URLSearchParams({id: deletePatientId})
     })
     .then(res => res.json())
     .then(data => {
+      Swal.close();
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       if (data.status === 'success') {
         refreshPatientTable();
       }
-      deletePatientModal.classList.remove('show');
+      deletePatientId = null;
+    })
+    .catch(() => {
+      Swal.close();
+      showNotification('Server error. Please try again.', 'error');
       deletePatientId = null;
     });
   }
@@ -658,9 +700,12 @@ function attachPatientRowEvents() {
   document.querySelectorAll('.edit-patient').forEach(btn => {
     btn.onclick = function() {
       const row = btn.closest('tr');
+      if (!row) return;
+      
       const id = row.dataset.id;
-      const patient_name = row.children[0].querySelector('strong').innerText.trim();
-      const contact = row.children[1].innerText.trim();
+      const nameElement = row.querySelector('strong');
+      const patient_name = nameElement ? nameElement.innerText.trim() : '';
+      const contact = row.children[1] ? row.children[1].innerText.trim() : '';
       const email = row.dataset.email || '';
       const address = row.dataset.address || '';
       const lastVisit = row.dataset.lastVisit || '';
@@ -695,10 +740,19 @@ function attachPatientRowEvents() {
       const lastVisitGroup = document.getElementById('last-visit-group');
       if (lastVisitGroup) {
         lastVisitGroup.style.display = 'block';
-        addPatientForm.last_visit.value = lastVisit;
+        if (addPatientForm.last_visit) {
+          addPatientForm.last_visit.value = lastVisit;
+        }
       }
       
       addPatientForm.dataset.editId = id;
+      
+      // Update modal title and text for editing
+      const patientModalTitle = document.querySelector('#add-patient-modal .modal-title');
+      const patientModalText = document.querySelector('#add-patient-modal .modal-text');
+      if (patientModalTitle) patientModalTitle.textContent = 'Edit Patient';
+      if (patientModalText) patientModalText.textContent = 'Update the patient details below.';
+      
       addPatientModal.classList.add('show');
       patientSubmitBtn.textContent = 'Finish Editing';
       hideNotification();
@@ -742,191 +796,206 @@ if (exportPdfBtn) {
     const diagnosis = document.getElementById('view-diagnosis').textContent || '—';
     const conclusion = document.getElementById('view-conclusion').textContent || '—';
     
+    // Helper function to check if content is meaningful
+    const hasContent = (text) => {
+      return text && text.trim() !== '' && text.trim() !== '—' && text.trim().toLowerCase() !== 'ha';
+    };
+    
     // Function to generate PDF with or without image
     const generatePDF = (imgData = null) => {
-      // Header
-      doc.setFontSize(20);
-      doc.setTextColor(102, 126, 234);
-      doc.text("Romero's Dental Clinic", 105, 20, { align: 'center' });
+      // Header with background
+      doc.setFillColor(102, 126, 234);
+      doc.rect(0, 0, 210, 40, 'F');
       
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text('Patient Record', 105, 30, { align: 'center' });
+      doc.setFontSize(22);
+      doc.setTextColor(255, 255, 255);
+      doc.setFont(undefined, 'bold');
+      doc.text("Romero's Dental Clinic", 105, 18, { align: 'center' });
       
-      // Add horizontal line
-      doc.setLineWidth(0.5);
-      doc.setDrawColor(102, 126, 234);
-      doc.line(20, 35, 190, 35);
+      doc.setFontSize(14);
+      doc.setFont(undefined, 'normal');
+      doc.text('Patient Medical Record', 105, 28, { align: 'center' });
       
       let y = 50;
       
-      // Add patient image if available
+      // Add patient image if available (larger, more visible)
       if (imgData) {
         try {
-          // Add colored border circle
+          // Draw circular border for image
           doc.setDrawColor(102, 126, 234);
           doc.setLineWidth(3);
-          doc.circle(105, y + 21, 22, 'S');
+          doc.circle(35, y + 15, 17, 'S');
           
-          // Add the circular clipped image on top (fills entire circle)
-          doc.addImage(imgData, 'PNG', 83, y - 1, 44, 44);
+          // Add patient image (circular)
+          doc.addImage(imgData, 'PNG', 18, y - 2, 34, 34);
           
-          y += 55;
+          // Patient name beside image
+          doc.setFontSize(16);
+          doc.setTextColor(30, 41, 59);
+          doc.setFont(undefined, 'bold');
+          doc.text(name, 58, y + 10);
+          
+          doc.setFontSize(10);
+          doc.setTextColor(100, 116, 139);
+          doc.setFont(undefined, 'normal');
+          doc.text(contact, 58, y + 18);
+          
+          y += 40;
         } catch (error) {
           console.log('Error adding image to PDF:', error);
-          // Continue without image - just add space
-          y += 10;
+          // Fallback if image fails
+          doc.setFontSize(16);
+          doc.setTextColor(30, 41, 59);
+          doc.setFont(undefined, 'bold');
+          doc.text(name, 20, y);
+          
+          doc.setFontSize(10);
+          doc.setTextColor(100, 116, 139);
+          doc.setFont(undefined, 'normal');
+          doc.text(contact, 20, y + 6);
+          
+          y += 18;
         }
       } else {
-        // No placeholder - just continue with patient details
+        // No image - just show name prominently
+        doc.setFontSize(16);
+        doc.setTextColor(30, 41, 59);
+        doc.setFont(undefined, 'bold');
+        doc.text(name, 20, y);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139);
+        doc.setFont(undefined, 'normal');
+        doc.text(contact, 20, y + 6);
+        
+        y += 18;
+      }
+      
+      // Divider line
+      doc.setDrawColor(226, 232, 240);
+      doc.setLineWidth(0.5);
+      doc.line(20, y, 190, y);
+      y += 8;
+      
+      // Patient details section - two column layout
+      doc.setFontSize(11);
+      doc.setTextColor(0, 0, 0);
+      
+      const leftCol = 20;
+      const rightCol = 110;
+      const labelWidth = 25;
+      
+      // Left column
+      doc.setFont(undefined, 'bold');
+      doc.text('Email:', leftCol, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(email || 'Not provided', leftCol + labelWidth, y);
+      
+      // Right column
+      doc.setFont(undefined, 'bold');
+      doc.text('Last Visit:', rightCol, y);
+      doc.setFont(undefined, 'normal');
+      doc.text(lastVisit, rightCol + labelWidth, y);
+      
+      y += 6;
+      
+      // Address (full width)
+      doc.setFont(undefined, 'bold');
+      doc.text('Address:', leftCol, y);
+      doc.setFont(undefined, 'normal');
+      const splitAddress = doc.splitTextToSize(address || 'Not provided', 150);
+      doc.text(splitAddress, leftCol + labelWidth, y);
+      
+      y += (splitAddress.length * 5) + 8;
+      
+      // Medical Information Section Header
+      doc.setFillColor(241, 245, 249);
+      doc.rect(18, y - 4, 170, 10, 'F');
+      
+      doc.setFontSize(10);
+      doc.setTextColor(30, 41, 59);
+      doc.setFont(undefined, 'bold');
+      doc.text('Medical Information', 22, y + 2);
+      
+      y += 15;
+      doc.setFontSize(10);
+      doc.setTextColor(0, 0, 0);
+      
+      // Only show medical fields that have content
+      const medicalFields = [
+        { label: 'Medical & Dental History', content: medicalHistory },
+        { label: 'Clinical Examination Findings', content: clinicalFindings },
+        { label: 'Diagnostic Tests', content: diagnosticTests },
+        { label: 'Diagnosis', content: diagnosis },
+        { label: 'Conclusion', content: conclusion }
+      ];
+      
+      let hasAnyMedicalInfo = false;
+      
+      medicalFields.forEach(field => {
+        if (hasContent(field.content)) {
+          hasAnyMedicalInfo = true;
+          
+          // Check if we need a new page
+          if (y > 240) {
+            doc.addPage();
+            y = 20;
+          }
+          
+          // Field label with better spacing
+          doc.setFont(undefined, 'bold');
+          doc.setTextColor(51, 65, 85);
+          doc.text(field.label + ':', 20, y);
+          y += 7;
+          
+          // Field content with better formatting and indentation
+          doc.setFont(undefined, 'normal');
+          doc.setTextColor(0, 0, 0);
+          const splitContent = doc.splitTextToSize(field.content, 165);
+          doc.text(splitContent, 25, y);
+          y += (splitContent.length * 5) + 8;
+        }
+      });
+      
+      // If no medical information, show message
+      if (!hasAnyMedicalInfo) {
+        doc.setFont(undefined, 'italic');
+        doc.setTextColor(148, 163, 184);
+        doc.text('No medical information recorded yet.', 22, y);
         y += 10;
       }
       
-      // Patient details section
-      doc.setFontSize(14);
-      doc.setTextColor(30, 41, 59);
-      doc.setFont(undefined, 'bold');
-      doc.text('Patient Information', 20, y);
-      y += 8;
+      y += 5;
+      y += 5;
       
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      
-      const labelX = 20;
-      const valueX = 45;
-      
-      doc.setFont(undefined, 'bold');
-      doc.text('Name:', labelX, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(name, valueX, y);
-      
-      y += 8;
-      doc.setFont(undefined, 'bold');
-      doc.text('Contact:', labelX, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(contact, valueX, y);
-      
-      y += 8;
-      doc.setFont(undefined, 'bold');
-      doc.text('Email:', labelX, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(email, valueX, y);
-      
-      y += 8;
-      doc.setFont(undefined, 'bold');
-      doc.text('Address:', labelX, y);
-      doc.setFont(undefined, 'normal');
-      const splitAddress = doc.splitTextToSize(address, 145);
-      doc.text(splitAddress, valueX, y);
-      
-      y += (splitAddress.length * 6) + 2;
-      doc.setFont(undefined, 'bold');
-      doc.text('Last Visit:', labelX, y);
-      doc.setFont(undefined, 'normal');
-      doc.text(lastVisit, valueX, y);
-      
-      // Medical Information Section
-      y += 12;
-      doc.setFontSize(14);
-      doc.setTextColor(30, 41, 59);
-      doc.setFont(undefined, 'bold');
-      doc.text('Medical Information', 20, y);
-      y += 8;
-      
-      doc.setFontSize(12);
-      doc.setTextColor(0, 0, 0);
-      
-      // Medical History
-      doc.setFont(undefined, 'bold');
-      doc.text('Medical & Dental History:', 20, y);
-      y += 6;
-      doc.setFont(undefined, 'normal');
-      const splitMedicalHistory = doc.splitTextToSize(medicalHistory, 170);
-      doc.text(splitMedicalHistory, 20, y);
-      y += (splitMedicalHistory.length * 6) + 6;
-      
-      // Check if we need a new page
-      if (y > 245) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      // Clinical Findings
-      doc.setFont(undefined, 'bold');
-      doc.text('Clinical Examination Findings:', 20, y);
-      y += 6;
-      doc.setFont(undefined, 'normal');
-      const splitClinicalFindings = doc.splitTextToSize(clinicalFindings, 170);
-      doc.text(splitClinicalFindings, 20, y);
-      y += (splitClinicalFindings.length * 6) + 6;
-      
-      // Check if we need a new page
-      if (y > 245) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      // Diagnostic Tests
-      doc.setFont(undefined, 'bold');
-      doc.text('Diagnostic Tests:', 20, y);
-      y += 6;
-      doc.setFont(undefined, 'normal');
-      const splitDiagnosticTests = doc.splitTextToSize(diagnosticTests, 170);
-      doc.text(splitDiagnosticTests, 20, y);
-      y += (splitDiagnosticTests.length * 6) + 6;
-      
-      // Check if we need a new page
-      if (y > 245) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      // Diagnosis
-      doc.setFont(undefined, 'bold');
-      doc.text('Diagnosis:', 20, y);
-      y += 6;
-      doc.setFont(undefined, 'normal');
-      const splitDiagnosis = doc.splitTextToSize(diagnosis, 170);
-      doc.text(splitDiagnosis, 20, y);
-      y += (splitDiagnosis.length * 6) + 6;
-      
-      // Check if we need a new page
-      if (y > 245) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      // Conclusion
-      doc.setFont(undefined, 'bold');
-      doc.text('Conclusion:', 20, y);
-      y += 6;
-      doc.setFont(undefined, 'normal');
-      const splitConclusion = doc.splitTextToSize(conclusion, 170);
-      doc.text(splitConclusion, 20, y);
-      y += (splitConclusion.length * 6) + 8;
-      
-      // Created date
-      doc.setFontSize(10);
-      doc.setTextColor(100, 100, 100);
-      doc.text(created, 20, y);
-      
-      // Footer on last page
+      // Footer on all pages
       const pageCount = doc.internal.getNumberOfPages();
+      const currentDate = new Date().toLocaleString('en-US', { 
+        year: 'numeric', 
+        month: 'short', 
+        day: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      });
+      
       for (let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        doc.setLineWidth(0.3);
-        doc.setDrawColor(200, 200, 200);
-        doc.line(20, 275, 190, 275);
         
+        // Footer line
+        doc.setLineWidth(0.3);
+        doc.setDrawColor(226, 232, 240);
+        doc.line(20, 280, 190, 280);
+        
+        // Footer text
         doc.setFontSize(8);
-        doc.setTextColor(150, 150, 150);
-        doc.text('Generated on: ' + new Date().toLocaleString(), 105, 280, { align: 'center' });
-        doc.text("Romero's Dental Clinic - Patient Management System", 105, 285, { align: 'center' });
-        doc.text(`Page ${i} of ${pageCount}`, 190, 290, { align: 'right' });
+        doc.setTextColor(148, 163, 184);
+        doc.text(`Generated: ${currentDate}`, 20, 285);
+        doc.text("Romero's Dental Clinic", 105, 285, { align: 'center' });
+        doc.text(`Page ${i}/${pageCount}`, 190, 285, { align: 'right' });
       }
       
       // Save PDF
-      const fileName = `patient_${name.replace(/\s+/g, '_')}_record.pdf`;
+      const fileName = `Patient_${name.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(fileName);
       showNotification('PDF exported successfully!', 'success');
     };
@@ -1018,12 +1087,17 @@ addPatientForm.addEventListener('submit', function(e) {
     url = 'edit_patient.php';
   }
   
+  // Close modal and show loading
+  addPatientModal.classList.remove('show');
+  showLoading(isEditing ? 'Updating patient...' : 'Adding patient...');
+  
   fetch(url, {
     method: 'POST',
     body: formData // Don't set Content-Type header, let browser set it
   })
   .then(res => res.json())
   .then(data => {
+    Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       form.reset();
@@ -1031,7 +1105,6 @@ addPatientForm.addEventListener('submit', function(e) {
       if (imagePreview) {
         imagePreview.style.display = 'none';
       }
-      addPatientModal.classList.remove('show');
       delete form.dataset.editId;
       
       // Just refresh the table for both add and edit
@@ -1039,6 +1112,7 @@ addPatientForm.addEventListener('submit', function(e) {
     }
   })
   .catch(() => {
+    Swal.close();
     showNotification('Server error. Please try again.', 'error');
   });
 });

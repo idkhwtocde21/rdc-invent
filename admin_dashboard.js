@@ -6,11 +6,11 @@ navLinks.forEach(link => {
   link.addEventListener('click', (e) => {
     e.preventDefault();
     const targetSection = link.dataset.section;
-    
+
     // Update active nav link
     navLinks.forEach(l => l.classList.remove('active'));
     link.classList.add('active');
-    
+
     // Show target section
     sections.forEach(section => {
       section.classList.remove('active');
@@ -18,8 +18,6 @@ navLinks.forEach(link => {
         section.classList.add('active');
       }
     });
-
-    // Hide any visible notification when navigating
     hideNotification();
   });
 });
@@ -28,14 +26,16 @@ navLinks.forEach(link => {
 const userMenuToggle = document.getElementById('user-menu-toggle');
 const userDropdown = document.querySelector('.user-dropdown');
 
-userMenuToggle.addEventListener('click', (e) => {
-  e.stopPropagation();
-  userMenuToggle.classList.toggle('active');
-});
+if (userMenuToggle) {
+  userMenuToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    userMenuToggle.classList.toggle('active');
+  });
+}
 
 // Close dropdown when clicking outside
 document.addEventListener('click', (e) => {
-  if (!userMenuToggle.contains(e.target)) {
+  if (userMenuToggle && !userMenuToggle.contains(e.target)) {
     userMenuToggle.classList.remove('active');
   }
 });
@@ -46,74 +46,71 @@ const logoutModal = document.getElementById('logout-modal');
 const confirmLogout = document.getElementById('confirm-logout');
 const cancelLogout = document.getElementById('cancel-logout');
 
-logoutBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  userMenuToggle.classList.remove('active');
-  logoutModal.classList.add('show');
-});
+if (logoutBtn) {
+  logoutBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    if (userMenuToggle) userMenuToggle.classList.remove('active');
+    logoutModal.classList.add('show');
+  });
+}
 
-cancelLogout.addEventListener('click', () => {
-  logoutModal.classList.remove('show');
-});
+if (cancelLogout) {
+  cancelLogout.addEventListener('click', () => {
+    logoutModal.classList.remove('show');
+  });
+}
 
-confirmLogout.addEventListener('click', () => {
-  logoutModal.classList.remove('show');
-  showNotification('Logging out...', 'success');
-  setTimeout(() => {
-    window.location.href = 'logout.php';
-  }, 1500);
-});
+if (confirmLogout) {
+  confirmLogout.addEventListener('click', () => {
+    logoutModal.classList.remove('show');
+    
+    // Show loading screen
+    const loadingScreen = document.getElementById('loading-screen');
+    if (loadingScreen) {
+      loadingScreen.classList.add('active');
+    }
+    
+    // Redirect after delay
+    setTimeout(() => {
+      window.location.href = 'logout.php';
+    }, 1500);
+  });
+}
 
-// Notification System
-let notificationTimeout = null;
-
+// SweetAlert2 Notification System
 function showNotification(message, type = 'success') {
-  const notification = document.getElementById('notification');
-  const notificationText = document.getElementById('notification-text');
-  const notificationIcon = document.getElementById('notification-icon');
-  
-  // Clear previous timeout
-  if (notificationTimeout) {
-    clearTimeout(notificationTimeout);
-  }
+  const Toast = Swal.mixin({
+    toast: true,
+    position: 'top-end',
+    showConfirmButton: false,
+    timer: 3000,
+    timerProgressBar: true,
+    didOpen: (toast) => {
+      toast.addEventListener('mouseenter', Swal.stopTimer)
+      toast.addEventListener('mouseleave', Swal.resumeTimer)
+    }
+  });
 
-  // Ensure visible immediately
-  notificationText.textContent = message;
-  notificationIcon.textContent = type === 'success' ? '✓' : '✕';
-  notification.className = 'notification show ' + type;
-  notification.style.display = 'flex';
-
-  // Hide after 3000ms with animation
-  notificationTimeout = setTimeout(() => {
-    hideNotification();
-  }, 3000);
+  Toast.fire({
+    icon: type === 'success' ? 'success' : 'error',
+    title: message
+  });
 }
 
 function hideNotification() {
-  const notification = document.getElementById('notification');
-  if (!notification) return;
-  
-  // Clear timeout
-  if (notificationTimeout) {
-    clearTimeout(notificationTimeout);
-    notificationTimeout = null;
-  }
-  
-  // Add hide animation
-  notification.classList.remove('show');
-  notification.classList.add('hide');
-  
-  // After animation completes, fully hide
-  setTimeout(() => {
-    notification.style.display = 'none';
-    notification.classList.remove('hide', 'success', 'error');
-    
-    // Reset icon/text
-    const notificationText = document.getElementById('notification-text');
-    const notificationIcon = document.getElementById('notification-icon');
-    if (notificationText) notificationText.textContent = '';
-    if (notificationIcon) notificationIcon.textContent = '';
-  }, 400);
+  Swal.close();
+}
+
+// Show loading with SweetAlert2
+function showLoading(message = 'Processing...') {
+  Swal.fire({
+    title: message,
+    allowOutsideClick: false,
+    allowEscapeKey: false,
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
 }
 
 // Admin Settings Form Handler
@@ -144,12 +141,15 @@ if (adminSettingsForm) {
       return;
     }
     
+    showLoading('Updating settings...');
+    
     fetch('admin_update_settings.php', {
       method: 'POST',
       body: formData
     })
     .then(res => res.json())
     .then((data) => {
+      Swal.close();
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       
       if (data.status === 'success') {
@@ -170,6 +170,7 @@ if (adminSettingsForm) {
       }
     })
     .catch(() => {
+      Swal.close();
       showNotification('Server error. Please try again.', 'error');
     });
   });
@@ -182,15 +183,18 @@ const adminPasswordInput = document.getElementById('admin-password');
 if (toggleAdminPassword && adminPasswordInput) {
   toggleAdminPassword.addEventListener('click', function() {
     const type = adminPasswordInput.getAttribute('type');
+    const eyeIcon = toggleAdminPassword.querySelector('.eye-icon');
     
     if (type === 'password') {
       adminPasswordInput.setAttribute('type', 'text');
       toggleAdminPassword.classList.add('active');
-      toggleAdminPassword.querySelector('.eye-icon').textContent = '👁️‍🗨️';
+      eyeIcon.classList.remove('fa-eye');
+      eyeIcon.classList.add('fa-eye-slash');
     } else {
       adminPasswordInput.setAttribute('type', 'password');
       toggleAdminPassword.classList.remove('active');
-      toggleAdminPassword.querySelector('.eye-icon').textContent = '👁️';
+      eyeIcon.classList.remove('fa-eye-slash');
+      eyeIcon.classList.add('fa-eye');
     }
   });
 }
@@ -253,26 +257,39 @@ addUserForm.addEventListener('submit', function(e) {
   const password = formData.get('password');
   const role = formData.get('role');
 
-  if (!username || !email || (!password && !addUserForm.dataset.editId)) {
-    showNotification('All fields are required.', 'error');
+  if (!username) {
+    showNotification('Username is required.', 'error');
     return;
   }
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showNotification('Valid email is required.', 'error');
     return;
   }
-
-  if (password && password.length < 6) {
-    showNotification('Password must be at least 6 characters.', 'error');
-    return;
+  if (!addUserForm.dataset.editId) { // creating user
+    if (!password) {
+      showNotification('Password is required for new user.', 'error');
+      return;
+    }
+    if (password.length < 6) {
+      showNotification('Password must be at least 6 characters.', 'error');
+      return;
+    }
+  } else { // editing user - password optional
+    if (password && password.length < 6) {
+      showNotification('Password (if provided) must be at least 6 characters.', 'error');
+      return;
+    }
   }
 
+  const isEditing = !!addUserForm.dataset.editId;
   let url = 'admin_add_user.php';
-  if (addUserForm.dataset.editId) {
+  if (isEditing) {
     formData.append('id', addUserForm.dataset.editId);
     url = 'admin_edit_user.php';
   }
+
+  addUserModal.classList.remove('show');
+  showLoading(isEditing ? 'Updating user...' : 'Adding user...');
 
   fetch(url, {
     method: 'POST',
@@ -281,11 +298,11 @@ addUserForm.addEventListener('submit', function(e) {
   .then(res => res.json())
   .then(data => {
     console.log('Add/Edit user response:', data);
+    Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       console.log('Add/Edit successful, will refresh table...');
       addUserForm.reset();
-      addUserModal.classList.remove('show');
       delete addUserForm.dataset.editId;
       // Force refresh the table
       setTimeout(() => {
@@ -295,6 +312,7 @@ addUserForm.addEventListener('submit', function(e) {
   })
   .catch((error) => {
     console.error('Error:', error);
+    Swal.close();
     showNotification('Server error. Please try again.', 'error');
   });
 });
@@ -316,6 +334,9 @@ confirmDeleteUser.addEventListener('click', () => {
     console.log('=== DELETE USER INITIATED ===');
     console.log('Deleting user ID:', deleteUserId);
     
+    deleteUserModal.classList.remove('show');
+    showLoading('Deleting user...');
+    
     fetch('admin_delete_user.php', {
       method: 'POST',
       body: new URLSearchParams({id: deleteUserId})
@@ -323,8 +344,8 @@ confirmDeleteUser.addEventListener('click', () => {
     .then(res => res.json())
     .then(data => {
       console.log('Delete response:', data);
+      Swal.close();
       showNotification(data.message, data.status === 'success' ? 'success' : 'error');
-      deleteUserModal.classList.remove('show');
       if (data.status === 'success') {
         console.log('Delete successful, will refresh table...');
         deleteUserId = null;
@@ -339,8 +360,8 @@ confirmDeleteUser.addEventListener('click', () => {
     })
     .catch(error => {
       console.error('Error deleting user:', error);
+      Swal.close();
       showNotification('Server error. Please try again.', 'error');
-      deleteUserModal.classList.remove('show');
       deleteUserId = null;
     });
   }

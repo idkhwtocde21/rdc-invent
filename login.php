@@ -25,6 +25,14 @@ if (isset($_SESSION['user_id'])) {
 </head>
 <body>
   
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Please wait...</p>
+    </div>
+  </div>
+
   <!-- Animated Background -->
   <div class="bg-animation">
     <span></span>

@@ -48,14 +48,14 @@ if ($users->num_rows === 0) {
   <td>
     <?php if ($row['id'] == $user_id): ?>
       <!-- Current logged-in admin -->
-      <button class="btn-icon view-admin-info" title="View">👁️</button>
+      <button class="btn-icon view-admin-info" title="View"><i class="fas fa-eye"></i></button>
     <?php elseif ($row['role'] == 2): ?>
       <!-- Other admin -->
-      <button class="btn-icon view-other-admin" title="View">👁️</button>
+      <button class="btn-icon view-other-admin" title="View"><i class="fas fa-eye"></i></button>
     <?php else: ?>
       <!-- Staff members -->
-      <button class="btn-icon edit-user" title="Edit">✏️</button>
-      <button class="btn-icon delete-user" title="Delete">🗑️</button>
+      <button class="btn-icon edit-user" title="Edit"><i class="fas fa-edit"></i></button>
+      <button class="btn-icon delete-user" title="Delete"><i class="fas fa-trash"></i></button>
     <?php endif; ?>
   </td>
 </tr>

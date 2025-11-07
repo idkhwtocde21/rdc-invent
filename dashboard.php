@@ -29,12 +29,24 @@ $stmt->close();
   <!-- Font Awesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
   <!-- Add jsPDF and html2canvas for PDF export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
 </head>
 <body>
+  <!-- Loading Screen -->
+  <div class="loading-screen" id="loading-screen">
+    <div class="loading-content">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">Logging out...</p>
+    </div>
+  </div>
+
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar">
@@ -48,13 +60,7 @@ $stmt->close();
 
       <ul class="sidebar-nav">
         <li class="nav-item">
-          <div class="nav-link active" data-section="settings">
-            <i class="fas fa-cog nav-icon"></i>
-            <span>Settings</span>
-          </div>
-        </li>
-        <li class="nav-item">
-          <div class="nav-link" data-section="patients">
+          <div class="nav-link active" data-section="patients">
             <i class="fas fa-users nav-icon"></i>
             <span>Patients</span>
           </div>
@@ -63,6 +69,12 @@ $stmt->close();
           <div class="nav-link" data-section="inventory">
             <i class="fas fa-box nav-icon"></i>
             <span>Inventory</span>
+          </div>
+        </li>
+        <li class="nav-item">
+          <div class="nav-link" data-section="settings">
+            <i class="fas fa-cog nav-icon"></i>
+            <span>Settings</span>
           </div>
         </li>
       </ul>
@@ -96,7 +108,7 @@ $stmt->close();
       <!-- Content -->
       <div class="content">
         <!-- Settings Section -->
-        <section class="section active" id="settings-section">
+        <section class="section" id="settings-section">
           <div class="section-header">
             <h2 class="section-title">User Settings</h2>
             <p class="section-description">Manage your account preferences and security</p>
@@ -122,7 +134,7 @@ $stmt->close();
                 <div style="position: relative;">
                   <input type="password" class="form-input" placeholder="Enter new password" name="password" id="settings-password">
                   <button type="button" class="password-toggle" id="toggle-settings-password" aria-label="Toggle password visibility">
-                    <span class="eye-icon">👁️</span>
+                    <i class="fas fa-eye eye-icon"></i>
                   </button>
                 </div>
               </div>
@@ -135,7 +147,7 @@ $stmt->close();
         </section>
 
         <!-- Patients Section -->
-        <section class="section" id="patients-section">
+        <section class="section active" id="patients-section">
           <div class="section-header">
             <h2 class="section-title">Patient Records</h2>
             <p class="section-description">View and manage patient information</p>
@@ -156,7 +168,6 @@ $stmt->close();
                     <th>Patient Name</th>
                     <th>Contact</th>
                     <th>Last Visit</th>
-                    <th>Medical Info</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
@@ -282,8 +293,8 @@ else:
       <span style="color: <?php echo $color; ?>; font-weight: 600;"><?php echo $icon . ' ' . htmlspecialchars($status); ?></span>
     </td>
     <td>
-      <button class="btn btn-secondary btn-small edit-inventory">✏️ Edit</button>
-      <button class="btn btn-danger btn-small delete-inventory">🗑️ Delete</button>
+      <button class="btn btn-secondary btn-small edit-inventory"><i class="fas fa-edit"></i> Edit</button>
+      <button class="btn btn-danger btn-small delete-inventory"><i class="fas fa-trash"></i> Delete</button>
     </td>
   </tr>
 

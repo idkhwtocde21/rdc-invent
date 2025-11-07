@@ -85,21 +85,30 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     const formData = new FormData(document.getElementById('loginForm'));
 
+    // Show loading screen
+    const loadingScreen = document.getElementById('loading-screen');
+    loadingScreen.classList.add('active');
+
     fetch('login_handler.php', {
       method: 'POST',
       body: formData
     })
     .then(res => res.json())
     .then(data => {
-      showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       if (data.status === 'success') {
+        // Keep loading screen and redirect after delay
         setTimeout(() => {
-          window.location.href = data.redirect; // Use dynamic redirect
+          window.location.href = data.redirect;
         }, 1500);
+      } else {
+        // Hide loading screen and show error
+        loadingScreen.classList.remove('active');
+        showNotification(data.message, 'error');
       }
     })
-    .catch(() => {
-      showNotification('✕ Server error. Please try again.', 'error');
+    .catch(err => {
+      loadingScreen.classList.remove('active');
+      showNotification('An error occurred. Please try again.', 'error');
     });
   });
 
