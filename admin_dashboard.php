@@ -219,25 +219,32 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                     <th>Username</th>
                     <th>Email</th>
                     <th>Role</th>
+                    <th>Status</th>
                     <th>Joined</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="users-table-body">
                   <?php
-                  $users = $conn->query("SELECT id, username, email, role, created_at FROM users ORDER BY created_at DESC");
+                  $users = $conn->query("SELECT id, username, email, role, is_active, created_at FROM users ORDER BY created_at DESC");
                   while ($row = $users->fetch_assoc()):
                   ?>
                   <tr data-id="<?php echo $row['id']; ?>" 
                       data-username="<?php echo htmlspecialchars($row['username']); ?>"
                       data-email="<?php echo htmlspecialchars($row['email']); ?>"
                       data-role="<?php echo $row['role']; ?>"
+                      data-active="<?php echo $row['is_active']; ?>"
                       data-joined="<?php echo date('M d, Y', strtotime($row['created_at'])); ?>">
                     <td><strong><?php echo htmlspecialchars($row['username']); ?></strong></td>
                     <td><?php echo htmlspecialchars($row['email']); ?></td>
                     <td>
                       <span class="badge <?php echo $row['role'] == 2 ? 'badge-admin' : 'badge-staff'; ?>">
                         <?php echo $row['role'] == 2 ? 'Admin' : 'Staff'; ?>
+                      </span>
+                    </td>
+                    <td>
+                      <span class="badge <?php echo $row['is_active'] == 1 ? 'badge-success' : 'badge-danger'; ?>">
+                        <?php echo $row['is_active'] == 1 ? 'Active' : 'Disabled'; ?>
                       </span>
                     </td>
                     <td><?php echo date('M d, Y', strtotime($row['created_at'])); ?></td>
@@ -250,7 +257,11 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                         <button class="btn-icon view-other-admin" title="View"><i class="fas fa-eye"></i></button>
                       <?php else: ?>
                         <!-- Staff members -->
-                        <button class="btn-icon edit-user" title="Edit"><i class="fas fa-edit"></i></button>
+                        <?php if ($row['is_active'] == 1): ?>
+                          <button class="btn-icon disable-user" title="Disable Account"><i class="fas fa-ban"></i></button>
+                        <?php else: ?>
+                          <button class="btn-icon enable-user" title="Enable Account"><i class="fas fa-check-circle"></i></button>
+                        <?php endif; ?>
                         <button class="btn-icon delete-user" title="Delete"><i class="fas fa-trash"></i></button>
                       <?php endif; ?>
                     </td>

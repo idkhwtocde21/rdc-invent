@@ -12,7 +12,11 @@ if ($inv->num_rows === 0): ?>
 else:
   while ($row = $inv->fetch_assoc()):
 ?>
-  <tr data-id="<?php echo $row['id']; ?>">
+  <tr data-id="<?php echo $row['id']; ?>" 
+      data-item-name="<?php echo htmlspecialchars($row['item_name']); ?>"
+      data-category="<?php echo htmlspecialchars($row['category']); ?>"
+      data-quantity="<?php echo $row['quantity']; ?>"
+      data-status="<?php echo htmlspecialchars($row['status']); ?>">
     <td>
       <div style="display: flex; align-items: center; gap: 8px;">
         <span>📦</span>

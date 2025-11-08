@@ -338,15 +338,23 @@ else:
         </div>
         <div class="form-group">
           <label class="form-label">Category</label>
-          <input type="text" class="form-input" name="category" required>
+          <select class="form-input" name="category" required>
+            <option value="">Select category</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Tool">Tool</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Supplies">Supplies</option>
+            <option value="Consumables">Consumables</option>
+            <option value="Other">Other</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Quantity</label>
           <input type="number" class="form-input" name="quantity" min="0" required>
         </div>
-        <div class="form-group">
+        <div class="form-group" id="status-field-group" style="display: none;">
           <label class="form-label">Status</label>
-          <select class="form-input" name="status" required>
+          <select class="form-input" name="status">
             <option value="">Select status</option>
             <option value="Available">Available</option>
             <option value="Low Stock">Low Stock</option>

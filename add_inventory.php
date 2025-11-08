@@ -1,6 +1,8 @@
 <?php
-session_start(); // ADD THIS - Required to access session variables
+session_start();
 include("db.php");
+
+header('Content-Type: application/json');
 
 if (!isset($_SESSION['user_id'])) {
     echo json_encode(["status" => "error", "message" => "Unauthorized access."]);
@@ -11,9 +13,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $item_name = trim($_POST['item_name'] ?? '');
     $category = trim($_POST['category'] ?? '');
     $quantity = isset($_POST['quantity']) ? intval($_POST['quantity']) : null;
-    $status = trim($_POST['status'] ?? '');
 
-    if ($item_name === "" || $category === "" || $quantity === null || $quantity < 0 || $status === "") {
+    if ($item_name === "" || $category === "" || $quantity === null || $quantity < 0) {
         echo json_encode(["status" => "error", "message" => "All fields are required and quantity must be non-negative."]);
         exit;
     }
@@ -28,6 +29,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
+    // Check for duplicate item names
+    $check_stmt = $conn->prepare("SELECT id FROM inventory WHERE item_name = ?");
+    $check_stmt->bind_param("s", $item_name);
+    $check_stmt->execute();
+    $check_stmt->store_result();
+    
+    if ($check_stmt->num_rows > 0) {
+        echo json_encode(["status" => "error", "message" => "An item with this name already exists."]);
+        $check_stmt->close();
+        exit;
+    }
+    $check_stmt->close();
+    
+    // Category validation: must be from allowed list
+    $allowed_categories = ['Medicine', 'Tool', 'Equipment', 'Supplies', 'Consumables', 'Other'];
+    if (!in_array($category, $allowed_categories)) {
+        echo json_encode(["status" => "error", "message" => "Invalid category selected."]);
+        exit;
+    }
+    
     // Category validation: minimum 2 characters
     if (strlen($category) < 2) {
         echo json_encode(["status" => "error", "message" => "Category must be at least 2 characters."]);
@@ -38,23 +59,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     
-    // Status validation: must be one of the predefined values
-    $valid_statuses = ['Available', 'Low Stock', 'Out of Stock'];
-    if (!in_array($status, $valid_statuses)) {
-        echo json_encode(["status" => "error", "message" => "Invalid status value."]);
+    // Quantity validation: cannot exceed 100
+    if ($quantity > 100) {
+        echo json_encode(["status" => "error", "message" => "Quantity cannot exceed 100 items."]);
         exit;
     }
-
-    // Validation: If status is "Out of Stock", quantity must be 0
-    if ($status === 'Out of Stock' && $quantity !== 0) {
-        echo json_encode(["status" => "error", "message" => "Quantity must be 0 when status is 'Out of Stock'."]);
-        exit;
-    }
-
-    // Validation: If status is NOT "Out of Stock", quantity must be at least 1
-    if ($status !== 'Out of Stock' && $quantity < 1) {
-        echo json_encode(["status" => "error", "message" => "Quantity must be at least 1 when item is in stock."]);
-        exit;
+    
+    // Auto-determine status based on quantity
+    if ($quantity == 0) {
+        $status = 'Out of Stock';
+    } elseif ($quantity < 5) {
+        $status = 'Low Stock';
+    } else {
+        $status = 'Available';
     }
 
     $stmt = $conn->prepare("INSERT INTO inventory (item_name, category, quantity, status) VALUES (?, ?, ?, ?)");

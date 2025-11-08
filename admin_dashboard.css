@@ -566,6 +566,16 @@ body {
   color: white;
 }
 
+.badge-success {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.badge-danger {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
 .status-badge {
   padding: 6px 12px;
   border-radius: 20px;

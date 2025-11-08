@@ -113,6 +113,20 @@ function showLoading(message = 'Processing...') {
   });
 }
 
+// Store original admin settings data for change detection
+let originalAdminSettingsData = {};
+
+// Load original admin settings on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const adminSettingsForm = document.getElementById('admin-settings-form');
+  if (adminSettingsForm) {
+    originalAdminSettingsData = {
+      username: adminSettingsForm.username.value.trim(),
+      email: adminSettingsForm.email.value.trim()
+    };
+  }
+});
+
 // Admin Settings Form Handler
 const adminSettingsForm = document.getElementById('admin-settings-form');
 if (adminSettingsForm) {
@@ -141,37 +155,74 @@ if (adminSettingsForm) {
       return;
     }
     
-    showLoading('Updating settings...');
+    // Check if any fields changed
+    const hasChanges = 
+      username !== originalAdminSettingsData.username ||
+      email !== originalAdminSettingsData.email ||
+      (password && password.trim() !== '');
     
-    fetch('admin_update_settings.php', {
-      method: 'POST',
-      body: formData
-    })
-    .then(res => res.json())
-    .then((data) => {
-      Swal.close();
-      showNotification(data.message, data.status === 'success' ? 'success' : 'error');
-      
-      if (data.status === 'success') {
-        // Clear password field
-        document.getElementById('admin-password').value = '';
+    if (!hasChanges) {
+      showNotification('No credentials changed. Please modify at least one field to save.', 'error');
+      return;
+    }
+    
+    // Show confirmation dialog before saving
+    Swal.fire({
+      title: 'Save Changes',
+      text: 'Are you sure you want to update your account settings?',
+      icon: 'question',
+      showCancelButton: true,
+      confirmButtonColor: '#4c6ef5',
+      cancelButtonColor: '#94a3b8',
+      confirmButtonText: 'Save Changes',
+      cancelButtonText: 'Cancel',
+      reverseButtons: true
+    }).then((result) => {
+      if (result.isConfirmed) {
+        // User confirmed, proceed with update
+        showLoading('Updating settings...');
         
-        // Update topbar username
-        const topbarUser = document.querySelector('.topbar-user span');
-        if (topbarUser) {
-          topbarUser.textContent = username;
-        }
-        
-        // Update avatar
-        const userAvatar = document.querySelector('.user-avatar');
-        if (userAvatar) {
-          userAvatar.textContent = username.substring(0, 2).toUpperCase();
-        }
+        fetch('admin_update_settings.php', {
+          method: 'POST',
+          body: formData
+        })
+        .then(res => res.json())
+        .then((data) => {
+          Swal.close();
+          
+          if (data.status === 'success') {
+            // Show success message with auto-redirect
+            Swal.fire({
+              title: 'Settings Updated!',
+              html: 'Your settings have been updated successfully.<br>You will be redirected to the login page...',
+              icon: 'success',
+              timer: 3000,
+              timerProgressBar: true,
+              showConfirmButton: false,
+              allowOutsideClick: false,
+              allowEscapeKey: false,
+              willClose: () => {
+                // Show loading screen
+                const loadingScreen = document.getElementById('loading-screen');
+                if (loadingScreen) {
+                  loadingScreen.classList.add('active');
+                }
+                
+                // Redirect to logout (which will redirect to login)
+                setTimeout(() => {
+                  window.location.href = 'logout.php';
+                }, 500);
+              }
+            });
+          } else {
+            showNotification(data.message, 'error');
+          }
+        })
+        .catch(() => {
+          Swal.close();
+          showNotification('Server error. Please try again.', 'error');
+        });
       }
-    })
-    .catch(() => {
-      Swal.close();
-      showNotification('Server error. Please try again.', 'error');
     });
   });
 }
@@ -247,7 +298,7 @@ cancelAddUser.addEventListener('click', () => {
   hideNotification();
 });
 
-// Add/Edit User Form Handler
+// Add User Form Handler (Edit removed - now using Enable/Disable)
 addUserForm.addEventListener('submit', function(e) {
   e.preventDefault();
 
@@ -265,48 +316,34 @@ addUserForm.addEventListener('submit', function(e) {
     showNotification('Valid email is required.', 'error');
     return;
   }
-  if (!addUserForm.dataset.editId) { // creating user
-    if (!password) {
-      showNotification('Password is required for new user.', 'error');
-      return;
-    }
-    if (password.length < 6) {
-      showNotification('Password must be at least 6 characters.', 'error');
-      return;
-    }
-  } else { // editing user - password optional
-    if (password && password.length < 6) {
-      showNotification('Password (if provided) must be at least 6 characters.', 'error');
-      return;
-    }
+  if (!password) {
+    showNotification('Password is required for new user.', 'error');
+    return;
   }
-
-  const isEditing = !!addUserForm.dataset.editId;
-  let url = 'admin_add_user.php';
-  if (isEditing) {
-    formData.append('id', addUserForm.dataset.editId);
-    url = 'admin_edit_user.php';
+  if (password.length < 6) {
+    showNotification('Password must be at least 6 characters.', 'error');
+    return;
   }
 
   addUserModal.classList.remove('show');
-  showLoading(isEditing ? 'Updating user...' : 'Adding user...');
+  showLoading('Adding user...');
 
-  fetch(url, {
+  fetch('admin_add_user.php', {
     method: 'POST',
     body: formData
   })
   .then(res => res.json())
   .then(data => {
-    console.log('Add/Edit user response:', data);
+    console.log('Add user response:', data);
     Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
-      console.log('Add/Edit successful, will refresh table...');
+      console.log('Add successful, will refresh table...');
       addUserForm.reset();
-      delete addUserForm.dataset.editId;
-      // Force refresh the table
+      // Force refresh the table and stats
       setTimeout(() => {
         refreshUsersTable(currentFilter);
+        refreshStatistics();
       }, 100);
     }
   })
@@ -422,30 +459,103 @@ function attachUserRowEvents() {
     };
   });
 
-  // Edit User Handler
-  document.querySelectorAll('.edit-user').forEach(btn => {
+  // Disable User Handler
+  document.querySelectorAll('.disable-user').forEach(btn => {
     btn.onclick = function() {
       const row = btn.closest('tr');
       const id = row.dataset.id;
       const username = row.children[0].querySelector('strong').innerText.trim();
-      const email = row.children[1].innerText.trim();
-      const role = row.querySelector('.badge-admin') ? '2' : '1';
+      
+      // Show confirmation dialog
+      Swal.fire({
+        title: 'Disable User Account?',
+        html: `Are you sure you want to disable the account for <strong>${username}</strong>?<br><br>They will not be able to log in until the account is re-enabled.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, disable account',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          showLoading('Disabling account...');
+          
+          fetch('admin_disable_user.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}`
+          })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return res.json();
+          })
+          .then(data => {
+            Swal.close();
+            showNotification(data.message, data.status === 'success' ? 'success' : 'error');
+            if (data.status === 'success') {
+              refreshUsersTable();
+              refreshStatistics();
+            }
+          })
+          .catch((error) => {
+            Swal.close();
+            console.error('Error:', error);
+            showNotification('Server error. Please try again.', 'error');
+          });
+        }
+      });
+    };
+  });
 
-      addUserForm.reset();
-      addUserForm.username.value = username;
-      addUserForm.email.value = email;
-      addUserForm.role.value = role;
-      addUserForm.dataset.editId = id;
+  // Enable User Handler
+  document.querySelectorAll('.enable-user').forEach(btn => {
+    btn.onclick = function() {
+      const row = btn.closest('tr');
+      const id = row.dataset.id;
+      const username = row.children[0].querySelector('strong').innerText.trim();
       
-      // Make password optional for edit
-      addUserForm.querySelector('[name="password"]').removeAttribute('required');
-      
-      // Update modal title and button text
-      document.querySelector('#add-user-modal .modal-title').textContent = 'Edit User';
-      document.querySelector('#add-user-form .btn-primary').textContent = 'Update User';
-      
-      addUserModal.classList.add('show');
-      hideNotification();
+      // Show confirmation dialog
+      Swal.fire({
+        title: 'Enable User Account?',
+        html: `Are you sure you want to enable the account for <strong>${username}</strong>?<br><br>They will be able to log in again.`,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4c6ef5',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Yes, enable account',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          showLoading('Enabling account...');
+          
+          fetch('admin_enable_user.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: `id=${id}`
+          })
+          .then(res => {
+            if (!res.ok) {
+              throw new Error('Network response was not ok');
+            }
+            return res.json();
+          })
+          .then(data => {
+            Swal.close();
+            showNotification(data.message, data.status === 'success' ? 'success' : 'error');
+            if (data.status === 'success') {
+              refreshUsersTable();
+              refreshStatistics();
+            }
+          })
+          .catch((error) => {
+            Swal.close();
+            console.error('Enable user error:', error);
+            showNotification('Server error. Please check your connection and try again.', 'error');
+          });
+        }
+      });
     };
   });
 

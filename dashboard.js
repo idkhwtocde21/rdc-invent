@@ -120,6 +120,20 @@ const cancelSaveSettings = document.getElementById('cancel-save-settings');
 const confirmSaveSettings = document.getElementById('confirm-save-settings');
 let pendingSettingsData = null;
 
+// Store original settings data for change detection
+let originalSettingsData = {};
+
+// Load original settings on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const settingsForm = document.getElementById('settings-form');
+  if (settingsForm) {
+    originalSettingsData = {
+      username: settingsForm.username.value.trim(),
+      email: settingsForm.email.value.trim()
+    };
+  }
+});
+
 // Close save settings modal (Cancel)
 cancelSaveSettings.addEventListener('click', () => {
   saveSettingsModal.classList.remove('show');
@@ -170,10 +184,75 @@ document.getElementById('settings-form').addEventListener('submit', (e) => {
     return;
   }
   
-  // Store form data and show confirmation modal
-  pendingSettingsData = { formData, username };
-  saveSettingsModal.classList.add('show');
-  hideNotification();
+  // Check if any fields changed
+  const hasChanges = 
+    username !== originalSettingsData.username ||
+    email !== originalSettingsData.email ||
+    (password && password.trim() !== '');
+  
+  if (!hasChanges) {
+    showNotification('No credentials changed. Please modify at least one field to save.', 'error');
+    return;
+  }
+  
+  // Show confirmation dialog before saving
+  Swal.fire({
+    title: 'Save Changes',
+    text: 'Are you sure you want to update your account settings?',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#4c6ef5',
+    cancelButtonColor: '#94a3b8',
+    confirmButtonText: 'Save Changes',
+    cancelButtonText: 'Cancel',
+    reverseButtons: true
+  }).then((result) => {
+    if (result.isConfirmed) {
+      // User confirmed, proceed with update directly
+      showLoading('Updating settings...');
+      
+      fetch('update_settings.php', { 
+        method: 'POST',
+        body: formData
+      })
+      .then(res => res.json())
+      .then((data) => {
+        Swal.close();
+        
+        if (data.status === 'success') {
+          // Show success message with auto-redirect
+          Swal.fire({
+            title: 'Settings Updated!',
+            html: 'Your settings have been updated successfully.<br>You will be redirected to the login page...',
+            icon: 'success',
+            timer: 3000,
+            timerProgressBar: true,
+            showConfirmButton: false,
+            allowOutsideClick: false,
+            allowEscapeKey: false,
+            willClose: () => {
+              // Show loading screen
+              const loadingScreen = document.getElementById('loading-screen');
+              if (loadingScreen) {
+                loadingScreen.classList.add('active');
+              }
+              
+              // Redirect to logout (which will redirect to login)
+              setTimeout(() => {
+                window.location.href = 'logout.php';
+              }, 500);
+            }
+          });
+        } else {
+          showNotification(data.message, 'error');
+        }
+      })
+      .catch(() => {
+        Swal.close();
+        showNotification('Server error. Please try again.', 'error');
+      });
+    }
+  });
 });
 
 // Password visibility toggle for settings
@@ -216,29 +295,39 @@ confirmSaveSettings.addEventListener('click', () => {
     .then(res => res.json())
     .then((data) => {
       Swal.close(); // Close loading
-      showNotification(data.message, data.status === 'success' ? 'success' : 'error');
       
       if (data.status === 'success') {
-        // Clear password field after successful update
-        document.querySelector('#settings-form input[name="password"]').value = '';
-        
-        // Update topbar username display
-        const topbarUser = document.querySelector('.topbar-user span');
-        if (topbarUser) {
-          topbarUser.textContent = username;
-        }
-        
-        // Update avatar initials
-        const userAvatar = document.querySelector('.user-avatar');
-        if (userAvatar) {
-          userAvatar.textContent = username.substring(0, 2).toUpperCase();
-        }
+        // Show success message with auto-redirect
+        Swal.fire({
+          title: 'Settings Updated!',
+          html: 'Your settings have been updated successfully.<br>You will be redirected to the login page...',
+          icon: 'success',
+          timer: 3000,
+          timerProgressBar: true,
+          showConfirmButton: false,
+          allowOutsideClick: false,
+          allowEscapeKey: false,
+          willClose: () => {
+            // Show loading screen
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+              loadingScreen.classList.add('active');
+            }
+            
+            // Redirect to logout (which will redirect to login)
+            setTimeout(() => {
+              window.location.href = 'logout.php';
+            }, 500);
+          }
+        });
+      } else {
+        showNotification(data.message, 'error');
       }
       
       pendingSettingsData = null;
     })
     .catch(() => {
-      Swal.close(); // Close loading
+      Swal.close();
       showNotification('Server error. Please try again.', 'error');
       pendingSettingsData = null;
     });
@@ -276,12 +365,19 @@ const inventorySubmitBtn = document.getElementById('inventory-submit-btn');
 addItemBtn.addEventListener('click', () => {
   addInventoryForm.reset();
   delete addInventoryForm.dataset.editId;
+  originalInventoryData = {};
+  
+  // Hide status field (it's auto-calculated)
+  const statusFieldGroup = document.getElementById('status-field-group');
+  if (statusFieldGroup) {
+    statusFieldGroup.style.display = 'none';
+  }
   
   // Reset modal title and text for adding
   const inventoryModalTitle = document.querySelector('#add-inventory-modal .modal-title');
   const inventoryModalText = document.querySelector('#add-inventory-modal .modal-text');
   if (inventoryModalTitle) inventoryModalTitle.textContent = 'Add Inventory Item';
-  if (inventoryModalText) inventoryModalText.textContent = 'Fill out the details below to add a new item.';
+  if (inventoryModalText) inventoryModalText.textContent = 'Fill out the details below to add a new item. Status will be automatically determined based on quantity.';
   
   addInventoryModal.classList.add('show');
   inventorySubmitBtn.textContent = 'Add Item';
@@ -362,17 +458,29 @@ function attachInventoryRowEvents() {
     btn.onclick = function() {
       const row = btn.closest('tr');
       const id = row.dataset.id;
-      const item_name = row.children[0].querySelector('strong').innerText.trim();
-      const category = row.children[1].innerText.trim();
-      const quantity = row.children[2].innerText.trim();
-      const status = row.children[3].innerText.replace(/[^a-zA-Z ]/g, '').trim();
+      const item_name = row.dataset.itemName || row.children[0].querySelector('strong').innerText.trim();
+      const category = row.dataset.category || row.children[1].innerText.trim();
+      const quantity = row.dataset.quantity || row.children[2].innerText.trim();
 
       addInventoryForm.reset();
       addInventoryForm.item_name.value = item_name;
       addInventoryForm.category.value = category;
       addInventoryForm.quantity.value = quantity;
-      addInventoryForm.status.value = status;
+      
+      // Hide status field since it's auto-calculated
+      const statusFieldGroup = document.getElementById('status-field-group');
+      if (statusFieldGroup) {
+        statusFieldGroup.style.display = 'none';
+      }
+      
       addInventoryForm.dataset.editId = id;
+      
+      // Store original data for change detection
+      originalInventoryData = {
+        item_name: item_name,
+        category: category,
+        quantity: quantity
+      };
       
       // Update modal title and text for editing
       const inventoryModalTitle = document.querySelector('#add-inventory-modal .modal-title');
@@ -381,7 +489,7 @@ function attachInventoryRowEvents() {
       if (inventoryModalText) inventoryModalText.textContent = 'Update the details below for this item.';
       
       addInventoryModal.classList.add('show');
-      inventorySubmitBtn.textContent = 'Finish Editing';
+      inventorySubmitBtn.textContent = 'Confirm';
       hideNotification();
     };
   });
@@ -401,6 +509,9 @@ function attachInventoryRowEvents() {
 // Call once on page load
 attachInventoryRowEvents();
 
+// Store original inventory data for change detection
+let originalInventoryData = {};
+
 // Handle Add/Edit Inventory Form Submission
 addInventoryForm.addEventListener('submit', function(e) {
   e.preventDefault();
@@ -414,29 +525,30 @@ addInventoryForm.addEventListener('submit', function(e) {
   const itemName = addInventoryForm.item_name.value.trim();
   const category = addInventoryForm.category.value.trim();
   const quantity = addInventoryForm.quantity.value.trim();
-  const status = addInventoryForm.status.value.trim();
 
-  // Basic validation
-  if (!itemName || !category || quantity === '' || !status) {
+  // Error handling for required fields
+  if (!itemName || !category || quantity === '') {
+    let errorMessage = '';
     if (!itemName) {
       addInventoryForm.item_name.classList.add('error');
+      errorMessage = 'Item name is required';
       addInventoryForm.item_name.focus();
     } else if (!category) {
       addInventoryForm.category.classList.add('error');
+      errorMessage = 'Category is required';
       addInventoryForm.category.focus();
     } else if (quantity === '') {
       addInventoryForm.quantity.classList.add('error');
+      errorMessage = 'Quantity is required';
       addInventoryForm.quantity.focus();
-    } else {
-      addInventoryForm.status.classList.add('error');
-      addInventoryForm.status.focus();
     }
+    showNotification(errorMessage, 'error');
     return;
   }
 
   const quantityNum = Number(quantity);
 
-  // Quantity must be non-negative
+  // Quantity validation
   if (quantityNum < 0) {
     addInventoryForm.quantity.classList.add('error');
     showNotification('Quantity cannot be negative.', 'error');
@@ -444,26 +556,37 @@ addInventoryForm.addEventListener('submit', function(e) {
     return;
   }
 
-  // If status is "Out of Stock", quantity must be 0
-  if (status === 'Out of Stock' && quantityNum !== 0) {
+  // Maximum quantity validation
+  if (quantityNum > 100) {
     addInventoryForm.quantity.classList.add('error');
-    showNotification('Quantity must be 0 when status is "Out of Stock".', 'error');
-    addInventoryForm.quantity.focus();
-    return;
-  }
-
-  // If status is NOT "Out of Stock", quantity must be at least 1
-  if (status !== 'Out of Stock' && quantityNum < 1) {
-    addInventoryForm.quantity.classList.add('error');
-    showNotification('Quantity must be at least 1 when item is in stock.', 'error');
+    showNotification('Quantity cannot exceed 100 items.', 'error');
     addInventoryForm.quantity.focus();
     return;
   }
 
   const form = e.target;
+  const isEditing = !!form.dataset.editId;
+  
+  // Check if any fields changed (for edit mode)
+  if (isEditing) {
+    const currentData = {
+      item_name: itemName,
+      category: category,
+      quantity: quantityNum.toString()
+    };
+
+    const hasDataChanged = Object.keys(currentData).some(key => 
+      currentData[key] !== (originalInventoryData[key] || '')
+    );
+
+    if (!hasDataChanged) {
+      showNotification('No changes detected. Please modify at least one field to update.', 'warning');
+      return;
+    }
+  }
+  
   const formData = new FormData(form);
   let url = 'add_inventory.php';
-  const isEditing = !!form.dataset.editId;
   
   if (isEditing) {
     formData.append('id', form.dataset.editId);
@@ -478,19 +601,30 @@ addInventoryForm.addEventListener('submit', function(e) {
     method: 'POST',
     body: formData
   })
-  .then(res => res.json())
-  .then(data => {
+  .then(res => {
+    console.log('Response status:', res.status);
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.text();
+  })
+  .then(text => {
+    console.log('Raw response:', text);
+    const data = JSON.parse(text);
+    console.log('Parsed data:', data);
     Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
     if (data.status === 'success') {
       form.reset();
       delete form.dataset.editId;
+      originalInventoryData = {};
       refreshInventoryTable();
     }
   })
-  .catch(() => {
+  .catch((error) => {
     Swal.close();
-    showNotification('Server error. Please try again.', 'error');
+    console.error('Error:', error);
+    showNotification('Server error. Please check your connection and try again.', 'error');
   });
 });
 
@@ -747,6 +881,20 @@ function attachPatientRowEvents() {
       
       addPatientForm.dataset.editId = id;
       
+      // Store original data for change detection
+      originalPatientData = {
+        patient_name: patient_name,
+        contact: contact,
+        email: email,
+        address: address,
+        last_visit: lastVisit,
+        medical_history: medicalHistory,
+        clinical_findings: clinicalFindings,
+        diagnostic_tests: diagnosticTests,
+        diagnosis: diagnosis,
+        conclusion: conclusion
+      };
+      
       // Update modal title and text for editing
       const patientModalTitle = document.querySelector('#add-patient-modal .modal-title');
       const patientModalText = document.querySelector('#add-patient-modal .modal-text');
@@ -754,7 +902,7 @@ function attachPatientRowEvents() {
       if (patientModalText) patientModalText.textContent = 'Update the patient details below.';
       
       addPatientModal.classList.add('show');
-      patientSubmitBtn.textContent = 'Finish Editing';
+      patientSubmitBtn.textContent = 'Confirm';
       hideNotification();
     };
   });
@@ -1053,6 +1201,9 @@ if (exportPdfBtn) {
   });
 }
 
+// Store original patient data for change detection
+let originalPatientData = {};
+
 // Update form submission to handle file upload
 addPatientForm.addEventListener('submit', function(e) {
   e.preventDefault();
@@ -1065,22 +1216,104 @@ addPatientForm.addEventListener('submit', function(e) {
   // Client-side validation
   const patientName = addPatientForm.patient_name.value.trim();
   const contact = addPatientForm.contact.value.trim();
+  const email = addPatientForm.email.value.trim();
 
+  // Error handling for required fields
   if (!patientName || !contact) {
+    let errorMessage = '';
     if (!patientName) {
       addPatientForm.patient_name.classList.add('error');
+      errorMessage = 'Patient name is required';
       addPatientForm.patient_name.focus();
     } else if (!contact) {
       addPatientForm.contact.classList.add('error');
+      errorMessage = 'Contact number is required';
       addPatientForm.contact.focus();
     }
+    showNotification(errorMessage, 'error');
     return;
   }
 
+  // Validate contact number format
+  const contactRegex = /^[0-9]{10,15}$/;
+  if (!contactRegex.test(contact.replace(/[\s\-\(\)]/g, ''))) {
+    addPatientForm.contact.classList.add('error');
+    showNotification('Please enter a valid contact number (10-15 digits)', 'error');
+    addPatientForm.contact.focus();
+    return;
+  }
+
+  // Validate email format if provided
+  if (email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      addPatientForm.email.classList.add('error');
+      showNotification('Please enter a valid email address', 'error');
+      addPatientForm.email.focus();
+      return;
+    }
+  }
+
   const form = e.target;
-  const formData = new FormData(form); // This will handle file uploads
-  let url = 'add_patient.php';
   const isEditing = !!form.dataset.editId;
+  
+  // Check if any fields changed (for edit mode)
+  if (isEditing) {
+    const currentData = {
+      patient_name: patientName,
+      contact: contact,
+      email: email,
+      address: addPatientForm.address.value.trim(),
+      last_visit: addPatientForm.last_visit ? addPatientForm.last_visit.value : '',
+      medical_history: addPatientForm.medical_history.value.trim(),
+      clinical_findings: addPatientForm.clinical_findings.value.trim(),
+      diagnostic_tests: addPatientForm.diagnostic_tests.value.trim(),
+      diagnosis: addPatientForm.diagnosis.value.trim(),
+      conclusion: addPatientForm.conclusion.value.trim()
+    };
+
+    const hasFileChanged = addPatientForm.patient_image.files.length > 0;
+    const hasDataChanged = Object.keys(currentData).some(key => 
+      currentData[key] !== (originalPatientData[key] || '')
+    );
+
+    if (!hasDataChanged && !hasFileChanged) {
+      showNotification('No changes detected. Please modify at least one field to update.', 'warning');
+      return;
+    }
+
+    // Check if critical fields (name, contact, email) are being changed
+    const criticalFieldsChanged = 
+      currentData.patient_name !== originalPatientData.patient_name ||
+      currentData.contact !== originalPatientData.contact ||
+      currentData.email !== originalPatientData.email;
+
+    if (criticalFieldsChanged) {
+      // Show confirmation dialog for credential changes
+      Swal.fire({
+        title: 'Confirm Credential Changes',
+        html: 'You are about to change patient credentials:<br><strong>Name, Contact, or Email</strong><br><br>Are you sure you want to proceed?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4c6ef5',
+        cancelButtonColor: '#dc3545',
+        confirmButtonText: 'Yes, update credentials',
+        cancelButtonText: 'Cancel'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          submitPatientForm(form, isEditing);
+        }
+      });
+      return;
+    }
+  }
+  
+  submitPatientForm(form, isEditing);
+});
+
+function submitPatientForm(form, isEditing) {
+  const formData = new FormData(form);
+  let url = 'add_patient.php';
   
   if (isEditing) {
     formData.append('id', form.dataset.editId);
@@ -1093,9 +1326,14 @@ addPatientForm.addEventListener('submit', function(e) {
   
   fetch(url, {
     method: 'POST',
-    body: formData // Don't set Content-Type header, let browser set it
+    body: formData
   })
-  .then(res => res.json())
+  .then(res => {
+    if (!res.ok) {
+      throw new Error('Network response was not ok');
+    }
+    return res.json();
+  })
   .then(data => {
     Swal.close();
     showNotification(data.message, data.status === 'success' ? 'success' : 'error');
@@ -1106,16 +1344,17 @@ addPatientForm.addEventListener('submit', function(e) {
         imagePreview.style.display = 'none';
       }
       delete form.dataset.editId;
+      originalPatientData = {};
       
-      // Just refresh the table for both add and edit
       refreshPatientTable();
     }
   })
-  .catch(() => {
+  .catch((error) => {
     Swal.close();
-    showNotification('Server error. Please try again.', 'error');
+    console.error('Error:', error);
+    showNotification('Server error. Please check your connection and try again.', 'error');
   });
-});
+}
 
 function refreshPatientTable() {
   return fetch('patient_table.php')
