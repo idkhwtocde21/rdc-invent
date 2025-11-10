@@ -331,7 +331,7 @@ else:
         <h3 class="modal-title">Add Inventory Item</h3>
         <p class="modal-text">Fill out the details below to add a new item.</p>
       </div>
-      <form id="add-inventory-form">
+      <form id="add-inventory-form" novalidate>
         <div class="form-group">
           <label class="form-label">Item Name</label>
           <input type="text" class="form-input" name="item_name" required>
@@ -350,7 +350,7 @@ else:
         </div>
         <div class="form-group">
           <label class="form-label">Pieces</label>
-          <input type="number" class="form-input" name="quantity" min="0" required>
+          <input type="number" class="form-input" name="quantity" required>
         </div>
         <div class="form-group" id="status-field-group" style="display: none;">
           <label class="form-label">Status</label>
@@ -407,7 +407,7 @@ else:
         <h3 class="modal-title">Add Patient</h3>
         <p class="modal-text">Fill out the patient details below.</p>
       </div>
-      <form id="add-patient-form" enctype="multipart/form-data">
+      <form id="add-patient-form" enctype="multipart/form-data" novalidate>
         <div class="form-group">
           <label class="form-label">Patient Photo (Optional)</label>
           <div style="display: flex; flex-direction: column; gap: 12px;">

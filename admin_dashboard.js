@@ -314,25 +314,84 @@ addUserForm.addEventListener('submit', function(e) {
   e.preventDefault();
 
   const formData = new FormData(addUserForm);
+  const fullName = formData.get('full_name') ? formData.get('full_name').trim() : '';
   const username = formData.get('username').trim();
   const email = formData.get('email').trim();
   const password = formData.get('password');
   const role = formData.get('role');
 
+  // Full name validation (if field exists)
+  if (fullName !== '' && fullName.length < 2) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Full Name',
+      text: 'Full name must be at least 2 characters.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Username validation
   if (!username) {
-    showNotification('Username is required.', 'error');
+    Swal.fire({
+      icon: 'error',
+      title: 'Username Required',
+      text: 'Please enter a username.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
+
+  const usernamePattern = /^[A-Za-z0-9_\-]+$/;
+  if (!usernamePattern.test(username)) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Username',
+      text: 'Username can only contain letters, numbers, underscores, and hyphens.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  if (username.length < 3 || username.length > 50) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Username Length',
+      text: 'Username must be between 3 and 50 characters.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Email validation
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    showNotification('Valid email is required.', 'error');
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Email',
+      text: 'Please enter a valid email address.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
+
+  // Password validation
   if (!password) {
-    showNotification('Password is required for new user.', 'error');
+    Swal.fire({
+      icon: 'error',
+      title: 'Password Required',
+      text: 'Password is required for new user.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
+
   if (password.length < 6) {
-    showNotification('Password must be at least 6 characters.', 'error');
+    Swal.fire({
+      icon: 'error',
+      title: 'Password Too Short',
+      text: 'Password must be at least 6 characters long.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
@@ -1171,14 +1230,87 @@ if (adminPatientForm) {
     e.preventDefault();
     
     const formData = new FormData(adminPatientForm);
+    const patientName = formData.get('patient_name').trim();
+    const contact = formData.get('contact').trim();
+    const email = formData.get('email') ? formData.get('email').trim() : '';
     const isEditing = !!adminPatientForm.dataset.editId;
+
+    // Validate required fields
+    if (!patientName || !contact) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Required Fields Missing',
+        text: 'Patient name and contact are required.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    // Patient name validation
+    const namePattern = /^[A-Za-zÀ-ÿ\s\.\-']+$/;
+    if (!namePattern.test(patientName)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Name Format',
+        text: 'Patient name can only contain letters, spaces, dots, hyphens, and apostrophes.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    if (patientName.length < 2 || patientName.length > 100) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Name Length',
+        text: 'Patient name must be between 2 and 100 characters.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    // Contact validation
+    const contactPattern = /^[0-9+\-\s()]+$/;
+    if (!contactPattern.test(contact)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Contact Format',
+        text: 'Contact number can only contain numbers, +, -, spaces, and parentheses.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    const contactDigits = contact.replace(/[\s\-\(\)+]/g, '');
+    if (contactDigits.length < 10 || contactDigits.length > 20) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Contact Length',
+        text: 'Contact number must contain between 10 and 20 digits.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    // Email validation if provided
+    if (email) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Invalid Email Format',
+          text: 'Please enter a valid email address.',
+          confirmButtonColor: '#4c6ef5'
+        });
+        return;
+      }
+    }
     
     // Change detection for edit mode
     if (isEditing) {
       const currentData = {
-        patient_name: formData.get('patient_name'),
-        contact: formData.get('contact'),
-        email: formData.get('email'),
+        patient_name: patientName,
+        contact: contact,
+        email: email,
         address: formData.get('address'),
         last_visit: formData.get('last_visit'),
         medical_history: formData.get('medical_history'),
@@ -1193,13 +1325,55 @@ if (adminPatientForm) {
       );
       
       if (!hasChanges) {
-        showNotification('No changes detected.', 'error');
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Changes Detected',
+          text: 'Please modify at least one field to update.',
+          confirmButtonColor: '#4c6ef5'
+        });
         return;
       }
-      
-      formData.append('id', adminPatientForm.dataset.editId);
     }
     
+    // Check for duplicate patient before proceeding
+    checkAdminDuplicatePatient(patientName, contact, email, isEditing ? adminPatientForm.dataset.editId : 0, () => {
+      // No duplicate, proceed with submission
+      proceedWithAdminPatientSubmission(formData, isEditing);
+    });
+  });
+}
+
+function checkAdminDuplicatePatient(patientName, contact, email, excludeId, callback) {
+  const checkData = new FormData();
+  checkData.append('patient_name', patientName);
+  checkData.append('contact', contact);
+  checkData.append('email', email);
+  checkData.append('exclude_id', excludeId);
+
+  fetch('check_duplicate_patient.php', {
+    method: 'POST',
+    body: checkData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'duplicate') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Duplicate Patient Detected',
+        html: `A patient with similar information already exists:<br><br><strong>${data.duplicate_fields.join('<br>')}</strong><br><br>Please check the patient records before adding.`,
+        confirmButtonColor: '#4c6ef5'
+      });
+    } else {
+      callback(); // No duplicate, proceed
+    }
+  })
+  .catch(error => {
+    console.error('Duplicate check error:', error);
+    callback(); // On error, allow to proceed
+  });
+}
+
+function proceedWithAdminPatientSubmission(formData, isEditing) {
     const url = isEditing ? 'admin_edit_patient.php' : 'admin_add_patient.php';
     
     adminPatientModal.classList.remove('show');
@@ -1230,7 +1404,6 @@ if (adminPatientForm) {
       Swal.close();
       showNotification('Server error. Please try again.', 'error');
     });
-  });
 }
 
 function refreshAdminPatientsTable() {
@@ -1396,25 +1569,83 @@ if (adminInventoryForm) {
     e.preventDefault();
     
     const formData = new FormData(adminInventoryForm);
-    const isEditing = !!adminInventoryForm.dataset.editId;
-    
-    // Validation
+    const itemName = formData.get('item_name').trim();
+    const category = formData.get('category').trim();
     const quantity = parseInt(formData.get('quantity'));
-    if (quantity < 0) {
-      showNotification('Quantity cannot be negative.', 'error');
+    const isEditing = !!adminInventoryForm.dataset.editId;
+
+    // Required fields validation
+    if (!itemName || !category) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Required Fields Missing',
+        text: 'Item name and category are required.',
+        confirmButtonColor: '#4c6ef5'
+      });
       return;
     }
+
+    // Item name validation
+    const itemNamePattern = /^[A-Za-z0-9\s\.\-(),]+$/;
+    if (!itemNamePattern.test(itemName)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Item Name',
+        text: 'Item name can only contain letters, numbers, spaces, and basic punctuation (. - , ( ))',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    // Ensure item name is not just numbers
+    if (/^\d+$/.test(itemName)) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Item Name',
+        text: 'Item name cannot contain only numbers. Please include text.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
+    // Item name length validation
+    if (itemName.length < 2 || itemName.length > 100) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Item Name Length',
+        text: 'Item name must be between 2 and 100 characters.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+    
+    // Quantity validation
+    if (isNaN(quantity) || quantity < 0) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Quantity',
+        text: 'Quantity cannot be negative.',
+        confirmButtonColor: '#4c6ef5'
+      });
+      return;
+    }
+
     if (quantity > 100) {
-      showNotification('Quantity cannot exceed 100 items.', 'error');
+      Swal.fire({
+        icon: 'error',
+        title: 'Quantity Limit Exceeded',
+        text: 'Quantity cannot exceed 100 items.',
+        confirmButtonColor: '#4c6ef5'
+      });
       return;
     }
     
     // Change detection for edit mode
     if (isEditing) {
       const currentData = {
-        item_name: formData.get('item_name'),
-        category: formData.get('category'),
-        quantity: formData.get('quantity')
+        item_name: itemName,
+        category: category,
+        quantity: quantity.toString()
       };
       
       const hasChanges = Object.keys(currentData).some(key => 
@@ -1422,7 +1653,12 @@ if (adminInventoryForm) {
       );
       
       if (!hasChanges) {
-        showNotification('No changes detected.', 'error');
+        Swal.fire({
+          icon: 'warning',
+          title: 'No Changes Detected',
+          text: 'Please modify at least one field to update.',
+          confirmButtonColor: '#4c6ef5'
+        });
         return;
       }
       

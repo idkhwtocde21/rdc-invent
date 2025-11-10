@@ -542,7 +542,53 @@ addInventoryForm.addEventListener('submit', function(e) {
       errorMessage = 'Quantity is required';
       addInventoryForm.quantity.focus();
     }
-    showNotification(errorMessage, 'error');
+    
+    Swal.fire({
+      icon: 'error',
+      title: 'Validation Error',
+      text: errorMessage,
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Item name validation: must contain letters, not just numbers
+  const itemNamePattern = /^[A-Za-z0-9\s\.\-(),]+$/;
+  if (!itemNamePattern.test(itemName)) {
+    addInventoryForm.item_name.classList.add('error');
+    addInventoryForm.item_name.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Item Name',
+      text: 'Item name can only contain letters, numbers, spaces, and basic punctuation (. - , ( ))',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Ensure item name is not just numbers
+  if (/^\d+$/.test(itemName)) {
+    addInventoryForm.item_name.classList.add('error');
+    addInventoryForm.item_name.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Item Name',
+      text: 'Item name cannot contain only numbers. Please include text.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Item name length validation
+  if (itemName.length < 2 || itemName.length > 100) {
+    addInventoryForm.item_name.classList.add('error');
+    addInventoryForm.item_name.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Item Name',
+      text: 'Item name must be between 2 and 100 characters.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
@@ -551,16 +597,26 @@ addInventoryForm.addEventListener('submit', function(e) {
   // Quantity validation
   if (quantityNum < 0) {
     addInventoryForm.quantity.classList.add('error');
-    showNotification('Quantity cannot be negative.', 'error');
     addInventoryForm.quantity.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Quantity',
+      text: 'Quantity cannot be negative.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
   // Maximum quantity validation
   if (quantityNum > 100) {
     addInventoryForm.quantity.classList.add('error');
-    showNotification('Quantity cannot exceed 100 items.', 'error');
     addInventoryForm.quantity.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Quantity Limit Exceeded',
+      text: 'Quantity cannot exceed 100 items.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
@@ -580,7 +636,12 @@ addInventoryForm.addEventListener('submit', function(e) {
     );
 
     if (!hasDataChanged) {
-      showNotification('No changes detected. Please modify at least one field to update.', 'warning');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Changes Detected',
+        text: 'Please modify at least one field to update.',
+        confirmButtonColor: '#4c6ef5'
+      });
       return;
     }
   }
@@ -1279,16 +1340,67 @@ addPatientForm.addEventListener('submit', function(e) {
       errorMessage = 'Contact number is required';
       addPatientForm.contact.focus();
     }
-    showNotification(errorMessage, 'error');
+    
+    Swal.fire({
+      icon: 'error',
+      title: 'Required Field Missing',
+      text: errorMessage,
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Patient name validation: must contain letters, not just numbers or special characters
+  const namePattern = /^[A-Za-zÀ-ÿ\s\.\-']+$/;
+  if (!namePattern.test(patientName)) {
+    addPatientForm.patient_name.classList.add('error');
+    addPatientForm.patient_name.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Name Format',
+      text: 'Patient name can only contain letters, spaces, dots, hyphens, and apostrophes.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  // Patient name length validation
+  if (patientName.length < 2 || patientName.length > 100) {
+    addPatientForm.patient_name.classList.add('error');
+    addPatientForm.patient_name.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Name Length',
+      text: 'Patient name must be between 2 and 100 characters.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
   // Validate contact number format
-  const contactRegex = /^[0-9]{10,15}$/;
-  if (!contactRegex.test(contact.replace(/[\s\-\(\)]/g, ''))) {
+  const contactPattern = /^[0-9+\-\s()]+$/;
+  if (!contactPattern.test(contact)) {
     addPatientForm.contact.classList.add('error');
-    showNotification('Please enter a valid contact number (10-15 digits)', 'error');
     addPatientForm.contact.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Contact Format',
+      text: 'Contact number can only contain numbers, +, -, spaces, and parentheses.',
+      confirmButtonColor: '#4c6ef5'
+    });
+    return;
+  }
+
+  const contactDigits = contact.replace(/[\s\-\(\)+]/g, '');
+  if (contactDigits.length < 10 || contactDigits.length > 20) {
+    addPatientForm.contact.classList.add('error');
+    addPatientForm.contact.focus();
+    Swal.fire({
+      icon: 'error',
+      title: 'Invalid Contact Length',
+      text: 'Contact number must contain between 10 and 20 digits.',
+      confirmButtonColor: '#4c6ef5'
+    });
     return;
   }
 
@@ -1297,8 +1409,13 @@ addPatientForm.addEventListener('submit', function(e) {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       addPatientForm.email.classList.add('error');
-      showNotification('Please enter a valid email address', 'error');
       addPatientForm.email.focus();
+      Swal.fire({
+        icon: 'error',
+        title: 'Invalid Email Format',
+        text: 'Please enter a valid email address.',
+        confirmButtonColor: '#4c6ef5'
+      });
       return;
     }
   }
@@ -1306,6 +1423,44 @@ addPatientForm.addEventListener('submit', function(e) {
   const form = e.target;
   const isEditing = !!form.dataset.editId;
   
+  // Check for duplicate patient before proceeding
+  checkDuplicatePatient(patientName, contact, email, isEditing ? form.dataset.editId : 0, () => {
+    // Continue with the rest of the logic if no duplicate found
+    proceedWithPatientSubmission(form, isEditing, patientName, contact, email);
+  });
+});
+
+function checkDuplicatePatient(patientName, contact, email, excludeId, callback) {
+  const formData = new FormData();
+  formData.append('patient_name', patientName);
+  formData.append('contact', contact);
+  formData.append('email', email);
+  formData.append('exclude_id', excludeId);
+
+  fetch('check_duplicate_patient.php', {
+    method: 'POST',
+    body: formData
+  })
+  .then(res => res.json())
+  .then(data => {
+    if (data.status === 'duplicate') {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Duplicate Patient Detected',
+        html: `A patient with similar information already exists:<br><br><strong>${data.duplicate_fields.join('<br>')}</strong><br><br>Please check the patient records before adding.`,
+        confirmButtonColor: '#4c6ef5'
+      });
+    } else {
+      callback(); // No duplicate, proceed
+    }
+  })
+  .catch(error => {
+    console.error('Duplicate check error:', error);
+    callback(); // On error, allow to proceed
+  });
+}
+
+function proceedWithPatientSubmission(form, isEditing, patientName, contact, email) {
   // Check if any fields changed (for edit mode)
   if (isEditing) {
     const currentData = {
@@ -1327,7 +1482,12 @@ addPatientForm.addEventListener('submit', function(e) {
     );
 
     if (!hasDataChanged && !hasFileChanged) {
-      showNotification('No changes detected. Please modify at least one field to update.', 'warning');
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Changes Detected',
+        text: 'Please modify at least one field to update.',
+        confirmButtonColor: '#4c6ef5'
+      });
       return;
     }
 
@@ -1358,7 +1518,7 @@ addPatientForm.addEventListener('submit', function(e) {
   }
   
   submitPatientForm(form, isEditing);
-});
+}
 
 function submitPatientForm(form, isEditing) {
   const formData = new FormData(form);

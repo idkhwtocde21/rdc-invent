@@ -491,7 +491,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   <div class="modal" id="add-user-modal">
     <div class="modal-content">
       <h2 class="modal-title">Add New User</h2>
-      <form id="add-user-form">
+      <form id="add-user-form" novalidate>
         <div class="form-group">
           <label class="form-label">Full Name</label>
           <input type="text" class="form-input" name="full_name" required>
@@ -652,7 +652,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         <h3 class="modal-title" id="admin-patient-modal-title">Add Patient</h3>
         <p class="modal-text" id="admin-patient-modal-text">Fill out the patient details below.</p>
       </div>
-      <form id="admin-patient-form" enctype="multipart/form-data">
+      <form id="admin-patient-form" enctype="multipart/form-data" novalidate>
         <div class="form-group">
           <label class="form-label">Patient Image</label>
           <div class="image-upload-wrapper">
@@ -753,7 +753,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         <h3 class="modal-title" id="admin-inventory-modal-title">Add Inventory Item</h3>
         <p class="modal-text" id="admin-inventory-modal-text">Fill out the details below to add a new item.</p>
       </div>
-      <form id="admin-inventory-form">
+      <form id="admin-inventory-form" novalidate>
         <div class="form-group">
           <label class="form-label">Item Name</label>
           <input type="text" class="form-input" name="item_name" required>
@@ -772,7 +772,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         </div>
         <div class="form-group">
           <label class="form-label">Pieces</label>
-          <input type="number" class="form-input" name="quantity" min="0" required>
+          <input type="number" class="form-input" name="quantity" required>
         </div>
         <div class="form-group" id="admin-status-field-group" style="display: none;">
           <label class="form-label">Status</label>
