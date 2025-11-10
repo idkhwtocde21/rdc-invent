@@ -10,10 +10,10 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 2) {
 
 // Fetch admin details
 $user_id = $_SESSION['user_id'];
-$stmt = $conn->prepare("SELECT username, email FROM users WHERE id=? LIMIT 1");
+$stmt = $conn->prepare("SELECT full_name, username, email FROM users WHERE id=? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
-$stmt->bind_result($username, $email);
+$stmt->bind_result($full_name, $username, $email);
 $stmt->fetch();
 $stmt->close();
 
@@ -82,6 +82,12 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             <a href="#" class="nav-link" data-section="inventory">
               <span class="nav-icon"><i class="fas fa-box"></i></span>
               <span>Inventory</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" data-section="archive">
+              <span class="nav-icon"><i class="fas fa-archive"></i></span>
+              <span>Archive</span>
             </a>
           </li>
           <li class="nav-item">
@@ -165,18 +171,18 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             </div>
           </div>
 
-          <!-- Recent Activity -->
+          <!-- Recent Patients -->
           <div class="card">
-            <h3 class="card-title">Recent Activity</h3>
-            <div class="activity-list">
+            <h3 class="card-title">Recent Visits</h3>
+            <div class="activity-list" id="recent-visits-list">
               <?php
-              $recent_patients = $conn->query("SELECT patient_name, created_at FROM patients ORDER BY created_at DESC LIMIT 5");
+              $recent_patients = $conn->query("SELECT patient_name, last_visit FROM patients WHERE last_visit IS NOT NULL ORDER BY last_visit DESC LIMIT 5");
               while ($row = $recent_patients->fetch_assoc()): 
               ?>
               <div class="activity-item">
-                <span class="activity-icon"><i class="fas fa-plus-circle"></i></span>
-                <span class="activity-text">New patient: <strong><?php echo htmlspecialchars($row['patient_name']); ?></strong></span>
-                <span class="activity-time"><?php echo date('M d, Y', strtotime($row['created_at'])); ?></span>
+                <span class="activity-icon"><i class="fas fa-user-clock"></i></span>
+                <span class="activity-text"><strong><?php echo htmlspecialchars($row['patient_name']); ?></strong></span>
+                <span class="activity-time"><?php echo date('M d, Y g:i A', strtotime($row['last_visit'])); ?></span>
               </div>
               <?php endwhile; ?>
             </div>
@@ -226,10 +232,11 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                 </thead>
                 <tbody id="users-table-body">
                   <?php
-                  $users = $conn->query("SELECT id, username, email, role, is_active, created_at FROM users ORDER BY created_at DESC");
+                  $users = $conn->query("SELECT id, full_name, username, email, role, is_active, created_at FROM users ORDER BY created_at DESC");
                   while ($row = $users->fetch_assoc()):
                   ?>
                   <tr data-id="<?php echo $row['id']; ?>" 
+                      data-fullname="<?php echo htmlspecialchars($row['full_name']); ?>"
                       data-username="<?php echo htmlspecialchars($row['username']); ?>"
                       data-email="<?php echo htmlspecialchars($row['email']); ?>"
                       data-role="<?php echo $row['role']; ?>"
@@ -257,6 +264,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                         <button class="btn-icon view-other-admin" title="View"><i class="fas fa-eye"></i></button>
                       <?php else: ?>
                         <!-- Staff members -->
+                        <button class="btn-icon view-staff-info" title="View"><i class="fas fa-eye"></i></button>
                         <?php if ($row['is_active'] == 1): ?>
                           <button class="btn-icon disable-user" title="Disable Account"><i class="fas fa-ban"></i></button>
                         <?php else: ?>
@@ -273,11 +281,16 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
           </div>
         </section>
 
-        <!-- Patients Section (View Only) -->
+        <!-- Patients Section (Full CRUD) -->
         <section id="patients-section" class="section">
           <div class="section-header">
             <h2 class="section-title">All Patients</h2>
-            <input type="text" class="search-input" placeholder="Search patients...">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" class="search-input" placeholder="Search patients...">
+              <button class="btn btn-primary" id="open-add-patient-modal">
+                <i class="fas fa-plus"></i> Add Patient
+              </button>
+            </div>
           </div>
 
           <div class="card">
@@ -287,18 +300,26 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                   <tr>
                     <th>Patient Name</th>
                     <th>Contact</th>
+                    <th>Email</th>
                     <th>Last Visit</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="admin-patients-table-body">
                   <?php
-                  $patients = $conn->query("SELECT patient_name, contact, last_visit FROM patients ORDER BY id DESC");
+                  $patients = $conn->query("SELECT id, patient_name, contact, email, last_visit FROM patients ORDER BY id DESC");
                   while ($row = $patients->fetch_assoc()):
                   ?>
-                  <tr>
+                  <tr data-id="<?php echo $row['id']; ?>">
                     <td><strong><?php echo htmlspecialchars($row['patient_name']); ?></strong></td>
                     <td><?php echo htmlspecialchars($row['contact']); ?></td>
+                    <td><?php echo htmlspecialchars($row['email']); ?></td>
                     <td><?php echo $row['last_visit'] ? date('M d, Y g:i A', strtotime($row['last_visit'])) : 'No visit yet'; ?></td>
+                    <td>
+                      <button class="btn-icon view-patient-admin" title="View"><i class="fas fa-eye"></i></button>
+                      <button class="btn-icon edit-patient-admin" title="Edit"><i class="fas fa-edit"></i></button>
+                      <button class="btn-icon delete-patient-admin" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
                   </tr>
                   <?php endwhile; ?>
                 </tbody>
@@ -307,11 +328,16 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
           </div>
         </section>
 
-        <!-- Inventory Section (View Only) -->
+        <!-- Inventory Section (Full CRUD) -->
         <section id="inventory-section" class="section">
           <div class="section-header">
-            <h2 class="section-title">Inventory Overview</h2>
-            <input type="text" class="search-input" placeholder="Search items...">
+            <h2 class="section-title">Inventory Management</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <input type="text" class="search-input" placeholder="Search items...">
+              <button class="btn btn-primary" id="open-add-inventory-modal-admin">
+                <i class="fas fa-plus"></i> Add Item
+              </button>
+            </div>
           </div>
 
           <div class="card">
@@ -321,17 +347,27 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                   <tr>
                     <th>Item Name</th>
                     <th>Category</th>
-                    <th>Quantity</th>
+                    <th>Pieces</th>
                     <th>Status</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody id="admin-inventory-table-body">
                   <?php
-                  $inventory = $conn->query("SELECT item_name, category, quantity, status FROM inventory ORDER BY id DESC");
+                  $inventory = $conn->query("SELECT id, item_name, category, quantity, status FROM inventory ORDER BY id DESC");
                   while ($row = $inventory->fetch_assoc()):
                   ?>
-                  <tr>
-                    <td><strong><?php echo htmlspecialchars($row['item_name']); ?></strong></td>
+                  <tr data-id="<?php echo $row['id']; ?>"
+                      data-item-name="<?php echo htmlspecialchars($row['item_name']); ?>"
+                      data-category="<?php echo htmlspecialchars($row['category']); ?>"
+                      data-quantity="<?php echo $row['quantity']; ?>"
+                      data-status="<?php echo htmlspecialchars($row['status']); ?>">
+                    <td>
+                      <div style="display: flex; align-items: center; gap: 8px;">
+                        <span>📦</span>
+                        <strong><?php echo htmlspecialchars($row['item_name']); ?></strong>
+                      </div>
+                    </td>
                     <td><?php echo htmlspecialchars($row['category']); ?></td>
                     <td><?php echo $row['quantity']; ?></td>
                     <td>
@@ -342,6 +378,66 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
                       ?>">
                         <?php echo $row['status']; ?>
                       </span>
+                    </td>
+                    <td>
+                      <button class="btn-icon edit-inventory-admin" title="Edit"><i class="fas fa-edit"></i></button>
+                      <button class="btn-icon delete-inventory-admin" title="Delete"><i class="fas fa-trash"></i></button>
+                    </td>
+                  </tr>
+                  <?php endwhile; ?>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- Settings Section -->
+        <!-- Archive Section -->
+        <section id="archive-section" class="section">
+          <div class="section-header">
+            <h2 class="section-title">Archived Patient Records</h2>
+            <p class="section-description">View archived patient records</p>
+          </div>
+
+          <div class="card">
+            <div class="table-container">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Patient Name</th>
+                    <th>Contact</th>
+                    <th>Archived Date</th>
+                    <th>Archived By</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="archive-table-body">
+                  <?php
+                  $archives = $conn->query("SELECT * FROM archived_patients ORDER BY archived_at DESC");
+                  while ($row = $archives->fetch_assoc()):
+                  ?>
+                  <tr data-id="<?php echo $row['id']; ?>">
+                    <td><?php echo htmlspecialchars($row['patient_name']); ?></td>
+                    <td><?php echo htmlspecialchars($row['contact']); ?></td>
+                    <td><?php echo date('M d, Y g:i A', strtotime($row['archived_at'])); ?></td>
+                    <td>
+                      <?php echo htmlspecialchars($row['archived_by_username']); ?>
+                      <span style="color: #64748b; font-size: 13px;">
+                        (<?php echo $row['archived_by_role'] == 2 ? 'Admin' : 'Staff'; ?>)
+                      </span>
+                    </td>
+                    <td>
+                      <div class="action-buttons">
+                        <button class="btn-icon view-archive" title="View">
+                          <i class="fas fa-eye"></i>
+                        </button>
+                        <button class="btn-icon restore-archive" title="Restore">
+                          <i class="fas fa-undo"></i>
+                        </button>
+                        <button class="btn-icon delete-archive-permanent" title="Delete Permanently">
+                          <i class="fas fa-trash-alt"></i>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                   <?php endwhile; ?>
@@ -397,6 +493,11 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
       <h2 class="modal-title">Add New User</h2>
       <form id="add-user-form">
         <div class="form-group">
+          <label class="form-label">Full Name</label>
+          <input type="text" class="form-input" name="full_name" required>
+        </div>
+
+        <div class="form-group">
           <label class="form-label">Username</label>
           <input type="text" class="form-input" name="username" required>
         </div>
@@ -443,13 +544,17 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   </div>
 
   <!-- Delete User Modal -->
+  <!-- Delete User Modal -->
   <div class="modal" id="delete-user-modal">
     <div class="modal-content">
-      <h2 class="modal-title">Delete User</h2>
-      <p>Are you sure you want to delete this user? This action cannot be undone.</p>
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 class="modal-title">Delete User</h3>
+        <p class="modal-text">Are you sure you want to delete this user? This action cannot be undone.</p>
+      </div>
       <div class="modal-actions">
-        <button class="btn-secondary" id="cancel-delete-user">Cancel</button>
-        <button class="btn-danger" id="confirm-delete-user">Delete</button>
+        <button class="btn btn-secondary" id="cancel-delete-user">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-user">Delete</button>
       </div>
     </div>
   </div>
@@ -457,8 +562,12 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
   <!-- View Admin Info Modal -->
   <div class="modal" id="view-admin-modal">
     <div class="modal-content">
-      <h2 class="modal-title">Your Account Information</h2>
+      <h2 class="modal-title" id="view-admin-modal-title">Admin Account Information</h2>
       <div style="margin: 20px 0;">
+        <div class="info-group">
+          <label class="info-label">Full Name</label>
+          <p class="info-value" id="view-admin-fullname"></p>
+        </div>
         <div class="info-group">
           <label class="info-label">Username</label>
           <p class="info-value" id="view-admin-username"></p>
@@ -477,8 +586,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
         </div>
       </div>
       <div class="modal-actions">
-        <button class="btn-secondary" id="close-view-admin">Close</button>
-        <button class="btn-primary" id="goto-settings">Edit in Settings</button>
+        <button class="btn-secondary" id="close-view-admin" style="width: 100%;">Close</button>
       </div>
     </div>
   </div>
@@ -498,6 +606,248 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
       </div>
       <div class="modal-actions">
         <button class="btn-primary" id="close-restricted-admin" style="width: 100%;">Understood</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Staff Info Modal -->
+  <div class="modal" id="view-staff-modal">
+    <div class="modal-content">
+      <h2 class="modal-title" id="view-staff-modal-title">Staff's Account Information</h2>
+      <div style="margin: 20px 0;">
+        <div class="info-group">
+          <label class="info-label">Full Name</label>
+          <p class="info-value" id="view-staff-fullname"></p>
+        </div>
+        <div class="info-group">
+          <label class="info-label">Username</label>
+          <p class="info-value" id="view-staff-username"></p>
+        </div>
+        <div class="info-group">
+          <label class="info-label">Email</label>
+          <p class="info-value" id="view-staff-email"></p>
+        </div>
+        <div class="info-group">
+          <label class="info-label">Role</label>
+          <p class="info-value"><span class="badge badge-staff">Staff</span></p>
+        </div>
+        <div class="info-group">
+          <label class="info-label">Joined</label>
+          <p class="info-value" id="view-staff-joined"></p>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="close-view-staff" style="width: 100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Patient Modal (Admin) -->
+  <div class="modal" id="admin-patient-modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <div class="patient-image-container" id="admin-edit-patient-image-container">
+          <i class="fas fa-user" style="font-size: 48px; color: #94a3b8;"></i>
+        </div>
+        <h3 class="modal-title" id="admin-patient-modal-title">Add Patient</h3>
+        <p class="modal-text" id="admin-patient-modal-text">Fill out the patient details below.</p>
+      </div>
+      <form id="admin-patient-form" enctype="multipart/form-data">
+        <div class="form-group">
+          <label class="form-label">Patient Image</label>
+          <div class="image-upload-wrapper">
+            <input type="file" class="form-input" id="admin-patient-image-input" name="patient_image" accept="image/*">
+            <small class="form-hint">Accepted formats: JPG, PNG, GIF (Max: 5MB)</small>
+          </div>
+        </div>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label class="form-label">Patient Name *</label>
+            <input type="text" class="form-input" name="patient_name" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact *</label>
+            <input type="text" class="form-input" name="contact" required>
+          </div>
+        </div>
+        <div class="form-row" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+          <div class="form-group">
+            <label class="form-label">Email</label>
+            <input type="email" class="form-input" name="email">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Address</label>
+            <input type="text" class="form-input" name="address">
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Last Visit Date & Time</label>
+          <input type="datetime-local" class="form-input" name="last_visit">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Medical History</label>
+          <textarea class="form-input" name="medical_history" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Clinical Findings</label>
+          <textarea class="form-input" name="clinical_findings" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Diagnostic Tests</label>
+          <textarea class="form-input" name="diagnostic_tests" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Diagnosis</label>
+          <textarea class="form-input" name="diagnosis" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Conclusion</label>
+          <textarea class="form-input" name="conclusion" rows="3"></textarea>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-admin-patient">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="admin-patient-submit-btn">Add Patient</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- View Patient Modal (Admin) -->
+  <div class="modal" id="admin-view-patient-modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <div class="patient-image-container" id="admin-patient-image-container">
+          <i class="fas fa-user" style="font-size: 48px; color: #94a3b8;"></i>
+        </div>
+        <h3 class="modal-title">Patient Information</h3>
+      </div>
+      <div class="patient-details" id="admin-patient-details">
+        <!-- Patient details will be loaded here -->
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="close-admin-view-patient" style="width: 100%;">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Patient Modal (Admin) -->
+  <div class="modal" id="admin-delete-patient-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 class="modal-title">Delete Patient</h3>
+        <p class="modal-text">Are you sure you want to delete this patient? This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancel-delete-patient-admin">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-patient-admin">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add/Edit Inventory Modal (Admin) -->
+  <div class="modal" id="admin-inventory-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon">📦</div>
+        <h3 class="modal-title" id="admin-inventory-modal-title">Add Inventory Item</h3>
+        <p class="modal-text" id="admin-inventory-modal-text">Fill out the details below to add a new item.</p>
+      </div>
+      <form id="admin-inventory-form">
+        <div class="form-group">
+          <label class="form-label">Item Name</label>
+          <input type="text" class="form-input" name="item_name" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Category</label>
+          <select class="form-input" name="category" required>
+            <option value="">Select category</option>
+            <option value="Medicine">Medicine</option>
+            <option value="Tool">Tool</option>
+            <option value="Equipment">Equipment</option>
+            <option value="Supplies">Supplies</option>
+            <option value="Consumables">Consumables</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Pieces</label>
+          <input type="number" class="form-input" name="quantity" min="0" required>
+        </div>
+        <div class="form-group" id="admin-status-field-group" style="display: none;">
+          <label class="form-label">Status</label>
+          <select class="form-input" name="status">
+            <option value="">Select status</option>
+            <option value="Available">Available</option>
+            <option value="Low Stock">Low Stock</option>
+            <option value="Out of Stock">Out of Stock</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-secondary" id="cancel-admin-inventory">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="admin-inventory-submit-btn">Add Item</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Delete Inventory Modal (Admin) -->
+  <div class="modal" id="admin-delete-inventory-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 class="modal-title">Delete Item</h3>
+        <p class="modal-text">Are you sure you want to delete this inventory item? This action cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancel-delete-inventory-admin">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-inventory-admin">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Archive Modal -->
+  <div class="modal" id="view-archive-modal">
+    <div class="modal-content" style="max-width: 800px;">
+      <div class="modal-header">
+        <div class="patient-image-container" id="archive-patient-image-container">
+          <i class="fas fa-user" style="font-size: 48px; color: #94a3b8;"></i>
+        </div>
+        <h3 class="modal-title">Archived Patient Information</h3>
+      </div>
+      <div id="archive-patient-details" class="patient-details"></div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="close-archive-view">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Restore Archive Confirmation Modal -->
+  <div class="modal" id="restore-archive-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-undo" style="color: #10b981;"></i></div>
+        <h3 class="modal-title">Restore Patient Record</h3>
+        <p class="modal-text">Are you sure you want to restore this patient record? It will be moved back to the active patients list.</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancel-restore-archive">Cancel</button>
+        <button class="btn btn-primary" id="confirm-restore-archive">Restore</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Archive Permanently Modal -->
+  <div class="modal" id="delete-archive-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
+        <h3 class="modal-title">Delete Permanently</h3>
+        <p class="modal-text">Are you sure you want to permanently delete this archived record? This action CANNOT be undone!</p>
+      </div>
+      <div class="modal-actions">
+        <button class="btn btn-secondary" id="cancel-delete-archive">Cancel</button>
+        <button class="btn btn-danger" id="confirm-delete-archive">Delete Permanently</button>
       </div>
     </div>
   </div>

@@ -253,7 +253,7 @@ else:
                   <tr>
                     <th>Item Name</th>
                     <th>Category</th>
-                    <th>Quantity</th>
+                    <th>Pieces</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -349,7 +349,7 @@ else:
           </select>
         </div>
         <div class="form-group">
-          <label class="form-label">Quantity</label>
+          <label class="form-label">Pieces</label>
           <input type="number" class="form-input" name="quantity" min="0" required>
         </div>
         <div class="form-group" id="status-field-group" style="display: none;">
@@ -373,7 +373,7 @@ else:
   <div class="modal" id="delete-inventory-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-icon">🗑️</div>
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
         <h3 class="modal-title">Delete Item</h3>
         <p class="modal-text">Are you sure you want to delete this inventory item? This action cannot be undone.</p>
       </div>
@@ -480,7 +480,7 @@ else:
   <div class="modal" id="delete-patient-modal">
     <div class="modal-content">
       <div class="modal-header">
-        <div class="modal-icon">🗑️</div>
+        <div class="modal-icon"><i class="fas fa-trash-alt"></i></div>
         <h3 class="modal-title">Delete Patient</h3>
         <p class="modal-text">Are you sure you want to delete this patient record? This action cannot be undone.</p>
       </div>

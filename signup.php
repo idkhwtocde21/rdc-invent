@@ -2,13 +2,24 @@
 include("db.php");
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $full_name = trim($_POST['full_name'] ?? '');
     $username = trim($_POST['username'] ?? '');
     $email = trim($_POST['email'] ?? '');
     $password = $_POST['password'] ?? '';
     $confirm = $_POST['confirm_password'] ?? '';
 
-    if ($username == "" || $email == "" || $password == "" || $confirm == "") {
+    if ($full_name == "" || $username == "" || $email == "" || $password == "" || $confirm == "") {
         echo json_encode(["status" => "error", "message" => " All fields are required."]);
+        exit;
+    }
+    
+    // Full name validation
+    if (strlen($full_name) < 2) {
+        echo json_encode(["status" => "error", "message" => " Full name must be at least 2 characters."]);
+        exit;
+    }
+    if (!preg_match('/^[a-zA-Z\s.]+$/', $full_name)) {
+        echo json_encode(["status" => "error", "message" => " Full name can only contain letters, spaces, and periods."]);
         exit;
     }
     
@@ -49,7 +60,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $hashed = password_hash($password, PASSWORD_DEFAULT);
-    $insert = $conn->query("INSERT INTO users (username, email, password) VALUES ('$username', '$email', '$hashed')");
+    $insert = $conn->query("INSERT INTO users (full_name, username, email, password) VALUES ('$full_name', '$username', '$email', '$hashed')");
 
     if ($insert) {
         echo json_encode(["status" => "success", "message" => " Account created successfully! Please login."]);

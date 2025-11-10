@@ -4,7 +4,8 @@ include("db.php");
 
 header('Content-Type: application/json');
 
-if (!isset($_SESSION['user_id'])) {
+// Check if user is admin
+if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 2) {
     echo json_encode(["status" => "error", "message" => "Unauthorized access."]);
     exit;
 }
@@ -66,7 +67,7 @@ if ($id) {
         // Commit transaction
         $conn->commit();
         
-        usleep(500000); // 0.5 second delay
+        usleep(500000);
         echo json_encode(["status" => "success", "message" => "Patient archived successfully!"]);
         
     } catch (Exception $e) {

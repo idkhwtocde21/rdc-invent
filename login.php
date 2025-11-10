@@ -145,6 +145,18 @@ if (isset($_SESSION['user_id'])) {
 
       <form id="signupForm">
         <div class="form-group">
+          <label class="form-label" for="signup-fullname">Full Name</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            id="signup-fullname"
+            name="full_name"
+            placeholder="Enter your full name"
+            required
+          >
+        </div>
+
+        <div class="form-group">
           <label class="form-label" for="signup-username">Username</label>
           <input 
             type="text" 

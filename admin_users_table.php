@@ -18,11 +18,11 @@ $filter = $_GET['filter'] ?? 'all'; // all, staff, admin
 
 // Build query based on filter
 if ($filter === 'staff') {
-    $query = "SELECT id, username, email, role, is_active, created_at FROM users WHERE role = 1 ORDER BY created_at DESC";
+    $query = "SELECT id, full_name, username, email, role, is_active, created_at FROM users WHERE role = 1 ORDER BY created_at DESC";
 } elseif ($filter === 'admin') {
-    $query = "SELECT id, username, email, role, is_active, created_at FROM users WHERE role = 2 ORDER BY created_at DESC";
+    $query = "SELECT id, full_name, username, email, role, is_active, created_at FROM users WHERE role = 2 ORDER BY created_at DESC";
 } else {
-    $query = "SELECT id, username, email, role, is_active, created_at FROM users ORDER BY created_at DESC";
+    $query = "SELECT id, full_name, username, email, role, is_active, created_at FROM users ORDER BY created_at DESC";
 }
 
 $users = $conn->query($query);
@@ -33,6 +33,7 @@ if ($users->num_rows === 0) {
     while ($row = $users->fetch_assoc()):
 ?>
 <tr data-id="<?php echo $row['id']; ?>"
+    data-fullname="<?php echo htmlspecialchars($row['full_name']); ?>"
     data-username="<?php echo htmlspecialchars($row['username']); ?>"
     data-email="<?php echo htmlspecialchars($row['email']); ?>"
     data-role="<?php echo $row['role']; ?>"
@@ -60,6 +61,7 @@ if ($users->num_rows === 0) {
       <button class="btn-icon view-other-admin" title="View"><i class="fas fa-eye"></i></button>
     <?php else: ?>
       <!-- Staff members -->
+      <button class="btn-icon view-staff-info" title="View"><i class="fas fa-eye"></i></button>
       <?php if ($row['is_active'] == 1): ?>
         <button class="btn-icon disable-user" title="Disable Account"><i class="fas fa-ban"></i></button>
       <?php else: ?>

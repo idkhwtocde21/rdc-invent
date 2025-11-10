@@ -716,25 +716,74 @@ cancelDeletePatient.addEventListener('click', () => {
 confirmDeletePatient.addEventListener('click', () => {
   if (deletePatientId) {
     deletePatientModal.classList.remove('show');
-    showLoading('Deleting patient...');
     
-    fetch('delete_patient.php', {
-      method: 'POST',
-      body: new URLSearchParams({id: deletePatientId})
-    })
-    .then(res => res.json())
-    .then(data => {
-      Swal.close();
-      showNotification(data.message, data.status === 'success' ? 'success' : 'error');
-      if (data.status === 'success') {
-        refreshPatientTable();
+    // First warning with 3-second timer
+    let timerInterval;
+    Swal.fire({
+      title: 'Are you sure?',
+      html: 'This patient record will be archived. You can proceed in <b></b> seconds.',
+      icon: 'warning',
+      timer: 3000,
+      timerProgressBar: true,
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        const b = Swal.getHtmlContainer().querySelector('b');
+        timerInterval = setInterval(() => {
+          const timeLeft = Math.ceil(Swal.getTimerLeft() / 1000);
+          b.textContent = timeLeft;
+        }, 100);
+      },
+      willClose: () => {
+        clearInterval(timerInterval);
       }
-      deletePatientId = null;
-    })
-    .catch(() => {
-      Swal.close();
-      showNotification('Server error. Please try again.', 'error');
-      deletePatientId = null;
+    }).then((result) => {
+      // After 3 seconds, show final confirmation
+      if (result.dismiss === Swal.DismissReason.timer) {
+        Swal.fire({
+          title: 'Final Confirmation',
+          text: 'Do you really want to archive this patient record? This action will move the record to the archive.',
+          icon: 'question',
+          showCancelButton: true,
+          confirmButtonColor: '#ef4444',
+          cancelButtonColor: '#64748b',
+          confirmButtonText: 'Yes, archive it',
+          cancelButtonText: 'Cancel',
+          allowOutsideClick: true,
+          allowEscapeKey: true
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Proceed with deletion/archiving
+            Swal.fire({
+              title: 'Archiving...',
+              allowOutsideClick: false,
+              didOpen: () => { Swal.showLoading(); }
+            });
+            
+            fetch('delete_patient.php', {
+              method: 'POST',
+              body: new URLSearchParams({id: deletePatientId})
+            })
+            .then(res => res.json())
+            .then(data => {
+              Swal.close();
+              showNotification(data.message, data.status === 'success' ? 'success' : 'error');
+              if (data.status === 'success') {
+                refreshPatientTable();
+              }
+              deletePatientId = null;
+            })
+            .catch(() => {
+              Swal.close();
+              showNotification('Server error. Please try again.', 'error');
+              deletePatientId = null;
+            });
+          } else {
+            deletePatientId = null;
+          }
+        });
+      }
     });
   }
 });
