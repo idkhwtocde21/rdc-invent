@@ -10,6 +10,8 @@ if (!isset($_SESSION['user_id'])) {
 
 // Fetch user details
 $user_id = $_SESSION['user_id'];
+$username = '';
+$email = '';
 $stmt = $conn->prepare("SELECT username, email FROM users WHERE id=? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();

@@ -10,6 +10,9 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 2) {
 
 // Fetch admin details
 $user_id = $_SESSION['user_id'];
+$full_name = '';
+$username = '';
+$email = '';
 $stmt = $conn->prepare("SELECT full_name, username, email FROM users WHERE id=? LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
