@@ -1135,16 +1135,21 @@ function attachAdminPatientRowEvents() {
           adminPatientForm.querySelector('[name="contact"]').value = p.contact || '';
           adminPatientForm.querySelector('[name="email"]').value = p.email || '';
           adminPatientForm.querySelector('[name="address"]').value = p.address || '';
+          
           // Format last_visit for datetime-local input (YYYY-MM-DDTHH:MM)
+          let formattedLastVisit = '';
           if (p.last_visit) {
             const lastVisitDate = new Date(p.last_visit);
-            const formatted = lastVisitDate.getFullYear() + '-' + 
+            formattedLastVisit = lastVisitDate.getFullYear() + '-' + 
               String(lastVisitDate.getMonth() + 1).padStart(2, '0') + '-' + 
               String(lastVisitDate.getDate()).padStart(2, '0') + 'T' + 
               String(lastVisitDate.getHours()).padStart(2, '0') + ':' + 
               String(lastVisitDate.getMinutes()).padStart(2, '0');
-            adminPatientForm.querySelector('[name="last_visit"]').value = formatted;
+            adminPatientForm.querySelector('[name="last_visit"]').value = formattedLastVisit;
+          } else {
+            adminPatientForm.querySelector('[name="last_visit"]').value = '';
           }
+          
           adminPatientForm.querySelector('[name="medical_history"]').value = p.medical_history || '';
           adminPatientForm.querySelector('[name="clinical_findings"]').value = p.clinical_findings || '';
           adminPatientForm.querySelector('[name="diagnostic_tests"]').value = p.diagnostic_tests || '';
@@ -1157,7 +1162,7 @@ function attachAdminPatientRowEvents() {
             contact: p.contact || '',
             email: p.email || '',
             address: p.address || '',
-            last_visit: p.last_visit || '',
+            last_visit: formattedLastVisit,
             medical_history: p.medical_history || '',
             clinical_findings: p.clinical_findings || '',
             diagnostic_tests: p.diagnostic_tests || '',
@@ -1311,20 +1316,25 @@ if (adminPatientForm) {
         patient_name: patientName,
         contact: contact,
         email: email,
-        address: formData.get('address'),
-        last_visit: formData.get('last_visit'),
-        medical_history: formData.get('medical_history'),
-        clinical_findings: formData.get('clinical_findings'),
-        diagnostic_tests: formData.get('diagnostic_tests'),
-        diagnosis: formData.get('diagnosis'),
-        conclusion: formData.get('conclusion')
+        address: (formData.get('address') || '').trim(),
+        last_visit: (formData.get('last_visit') || '').trim(),
+        medical_history: (formData.get('medical_history') || '').trim(),
+        clinical_findings: (formData.get('clinical_findings') || '').trim(),
+        diagnostic_tests: (formData.get('diagnostic_tests') || '').trim(),
+        diagnosis: (formData.get('diagnosis') || '').trim(),
+        conclusion: (formData.get('conclusion') || '').trim()
       };
       
-      const hasChanges = Object.keys(currentData).some(key => 
+      // Check if image was uploaded
+      const hasImageUpload = formData.get('patient_image') && formData.get('patient_image').size > 0;
+      
+      // Check for changes in form fields
+      const hasFormChanges = Object.keys(currentData).some(key => 
         currentData[key] !== (originalAdminPatientData[key] || '')
       );
       
-      if (!hasChanges) {
+      // If no form changes and no image upload, show warning
+      if (!hasFormChanges && !hasImageUpload) {
         Swal.fire({
           icon: 'warning',
           title: 'No Changes Detected',
@@ -1374,6 +1384,11 @@ function checkAdminDuplicatePatient(patientName, contact, email, excludeId, call
 }
 
 function proceedWithAdminPatientSubmission(formData, isEditing) {
+    // If editing, append the patient ID
+    if (isEditing) {
+      formData.append('id', adminPatientForm.dataset.editId);
+    }
+    
     const url = isEditing ? 'admin_edit_patient.php' : 'admin_add_patient.php';
     
     adminPatientModal.classList.remove('show');
