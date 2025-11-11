@@ -156,7 +156,7 @@ $stmt->close();
           <div class="controls">
             <input type="text" class="search-input" placeholder="🔍 Search patients by name...">
             <button class="btn btn-primary" id="open-add-patient-modal">
-              ➕ Add Patient
+              <i class="fas fa-user-plus"></i> Add Patient
             </button>
           </div>
 
@@ -242,7 +242,7 @@ else:
           <div class="controls">
             <input type="text" class="search-input" placeholder="🔍 Search inventory items...">
             <button class="btn btn-primary" id="open-add-inventory-modal">
-              ➕ Add Item
+              <i class="fas fa-box-open"></i> Add Item
             </button>
           </div>
 

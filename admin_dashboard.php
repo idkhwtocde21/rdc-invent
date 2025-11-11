@@ -288,7 +288,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             <div style="display: flex; gap: 10px; align-items: center;">
               <input type="text" class="search-input" placeholder="Search patients...">
               <button class="btn btn-primary" id="open-add-patient-modal">
-                <i class="fas fa-plus"></i> Add Patient
+                <i class="fas fa-user-plus"></i> Add Patient
               </button>
             </div>
           </div>
@@ -335,7 +335,7 @@ $low_stock = $conn->query("SELECT COUNT(*) as count FROM inventory WHERE status 
             <div style="display: flex; gap: 10px; align-items: center;">
               <input type="text" class="search-input" placeholder="Search items...">
               <button class="btn btn-primary" id="open-add-inventory-modal-admin">
-                <i class="fas fa-plus"></i> Add Item
+                <i class="fas fa-box-open"></i> Add Item
               </button>
             </div>
           </div>
